@@ -23,7 +23,9 @@ void MainWindow::on_AddButton_clicked()
     long op1 = stol(ui->OP1Decimal->text().toStdString());
     long op2 = stol(ui->OP2Decimal->text().toStdString());
     long result;
+
     DecimalOperations dec = DecimalOperations(op1, op2, &result);
+    IEEEOperations ieee = IEEEOperations(op1, op2, &result);
     dec.add();
     ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
 }
