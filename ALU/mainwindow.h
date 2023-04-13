@@ -2,6 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "decimaloperations.h"
+#include "ieeeoperations.h"
+
+using namespace std;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -24,6 +28,5 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    int button; //0 if ADD, 1 if MULTIPLY, 2 if DIVISION
 };
 #endif // MAINWINDOW_H
