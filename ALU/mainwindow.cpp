@@ -27,16 +27,15 @@ void MainWindow::on_AddButton_clicked()
     float op2 = ui->OP2Decimal->text().toFloat();
     float result;
 
-    DecimalOperations dec = DecimalOperations(op1, op2, &result);
+    //DecimalOperations dec = DecimalOperations(op1, op2, &result);
     //Llamada al metodo ieeeOperations
     IEEEOperations ieee = IEEEOperations(op1, op2, &result);
-    dec.add();
-    //IeeeOperations devuelve un string con el valor del numero en binario ieee754
-    string sop1 = ieee.translateDecToIEEE(op1);
-    string sop2 = ieee.translateDecToIEEE(op2);
-    //Muestra de prueba
-    cout<<"Numero 1: "<<sop1<<endl<<"Numero 2: "<<sop2<<endl;
+    ieee.add();
+
     //Llamada de la suma
+    //ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
+    ui->OP1IEEE->setText(QString::fromStdString(ieee.translateDecToIEEE(op1)));
+    ui->OP2IEEE->setText(QString::fromStdString(ieee.translateDecToIEEE(op2)));
     ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
 }
 
