@@ -39,22 +39,19 @@ void IEEEOperations::add()
     a.numero = op1;
 
 
-    std::bitset<8> exponenteBinA(a.bitfield.expo);
-    std::bitset<23> fraccionariaBinA(a.bitfield.partFrac);
     int signoA = a.bitfield.sign;
-    string exponenteA = exponenteBinA.to_string();
-    string mantisaA = fraccionariaBinA.to_string();
+    int exponenteA = a.bitfield.expo;
+    int mantisaA = a.bitfield.partFrac;
+
 
 
     union Code b;
     b.numero = op2;
 
-    std::bitset<8> exponenteBinB(b.bitfield.expo);
-    std::bitset<23> fraccionariaBinB(a.bitfield.partFrac);
     int signoB = b.bitfield.sign;
-    string exponenteB = exponenteBinB.to_string();
-    string mantisaB = fraccionariaBinB.to_string();
-    //Pruebas de conversión
+    int exponenteB = b.bitfield.expo;
+    int mantisaB = b.bitfield.partFrac;
+
     cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
     cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
     *result = 69;
