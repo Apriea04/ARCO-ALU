@@ -8,18 +8,30 @@ using namespace std;
 class IEEEOperations
 {
 public:
-    IEEEOperations(long op1, long op2, long *result);
+    IEEEOperations(float op1, float op2, float *result);
     ~IEEEOperations();
-    string translateDecToIEEE(long op);
+    string translateDecToIEEE(float op);
     void add();
     void multiply();
     void divide();
 
 private:
-    long op1;
-    long op2;
-    long *result;
+    float op1;
+    float op2;
+    float *result;
 
+};
+
+union Code {
+
+    struct{
+        unsigned int partFrac : 23;
+        unsigned int expo : 8;
+        unsigned int sign : 1;
+    }bitfield;
+
+    float numero;
+    unsigned int numerox;
 };
 
 #endif // IEEEOPERATIONS_H

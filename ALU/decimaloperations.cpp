@@ -1,6 +1,6 @@
 #include "decimaloperations.h"
 
-DecimalOperations::DecimalOperations(long op1, long op2, long *result)
+DecimalOperations::DecimalOperations(float op1, float op2, float *result)
 {
     this->op1 = op1;
     this->op2 = op2;
