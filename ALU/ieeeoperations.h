@@ -11,6 +11,7 @@ public:
     IEEEOperations(float op1, float op2, float *result);
     ~IEEEOperations();
     string translateDecToIEEE(float op);
+    string translateBinaryToHex(string bin);
     void add();
     void multiply();
     void divide();

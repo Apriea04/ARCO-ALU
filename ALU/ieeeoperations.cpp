@@ -1,6 +1,7 @@
 #include "ieeeoperations.h"
 #include <iostream>
 #include <bitset>
+#include <sstream>
 
 
 IEEEOperations::IEEEOperations(float op1, float op2, float *result)
@@ -30,6 +31,22 @@ string IEEEOperations::translateDecToIEEE(float op)
 
     return std::to_string(a.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
 }
+
+
+string IEEEOperations::translateBinaryToHex(string bin)
+{
+    // Convertir el string binario a un objeto bitset
+    bitset<64> bitSet(bin);
+
+    // Convertir el objeto bitset a un número hexadecimal en un stringstream
+    stringstream ss;
+    ss << hex << uppercase << bitSet.to_ullong();
+    string hexString = ss.str();
+    return hexString;
+}
+
+
+
 
 
 void IEEEOperations::add()

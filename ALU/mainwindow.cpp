@@ -28,14 +28,26 @@ void MainWindow::on_AddButton_clicked()
     float result;
 
     //DecimalOperations dec = DecimalOperations(op1, op2, &result);
-    //Llamada al metodo ieeeOperations
-    IEEEOperations ieee = IEEEOperations(op1, op2, &result);
-    ieee.add();
 
-    //Llamada de la suma
+    //Creamos objeto ieee
+    IEEEOperations ieee = IEEEOperations(op1, op2, &result);
+    //Llamada al metodo suma
+    ieee.add();
+    //Convertimos op1 y op2 a binario y lo recogemos como string
+    string bin1 = ieee.translateDecToIEEE(op1);
+    string bin2 = ieee.translateDecToIEEE(op2);
+    string binResult = ieee.translateDecToIEEE(result);
     //ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
-    ui->OP1IEEE->setText(QString::fromStdString(ieee.translateDecToIEEE(op1)));
-    ui->OP2IEEE->setText(QString::fromStdString(ieee.translateDecToIEEE(op2)));
+
+    //Mostramos los numeros en binario
+    ui->OP1IEEE->setText(QString::fromStdString(bin1));
+    ui->OP2IEEE->setText(QString::fromStdString(bin2));
+    ui->ResultIEEE->setText(QString::fromStdString(binResult));
+    //Mostramos los numeros en hexadecimal
+    ui->OP1Hex->setText(QString::fromStdString(ieee.translateBinaryToHex(bin1)));
+    ui->OP2Hex->setText(QString::fromStdString(ieee.translateBinaryToHex(bin2)));
+    ui->ResultHex->setText(QString::fromStdString(ieee.translateBinaryToHex(binResult)));
+    //Devolvemos la salida
     ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
 }
 
