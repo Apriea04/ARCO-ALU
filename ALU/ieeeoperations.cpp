@@ -32,7 +32,7 @@ string IEEEOperations::translateDecToIEEE(float op)
     return std::to_string(a.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
 }
 
-
+//Metodo que le pasas un string en binario y te devuelve un string en hexadecimal
 string IEEEOperations::translateBinaryToHex(string bin)
 {
     // Convertir el string binario a un objeto bitset
@@ -48,7 +48,7 @@ string IEEEOperations::translateBinaryToHex(string bin)
 
 
 
-
+//Metodo de la suma
 void IEEEOperations::add()
 {
     union Code a;
@@ -74,12 +74,60 @@ void IEEEOperations::add()
     *result = 69;
 }
 
+//Metodo de la multiplicacion
 void IEEEOperations::multiply()
 {
 
+    union Code a;
+
+    a.numero = op1;
+
+
+    int signoA = a.bitfield.sign;
+    int exponenteA = a.bitfield.expo;
+    int mantisaA = a.bitfield.partFrac;
+
+
+
+    union Code b;
+    b.numero = op2;
+
+    int signoB = b.bitfield.sign;
+    int exponenteB = b.bitfield.expo;
+    int mantisaB = b.bitfield.partFrac;
+
+    cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
+    cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
+
+    *result = 777;
 }
 
+
+//Metodo de la division
 void IEEEOperations::divide()
 {
 
+    union Code a;
+
+    a.numero = op1;
+
+
+    int signoA = a.bitfield.sign;
+    int exponenteA = a.bitfield.expo;
+    int mantisaA = a.bitfield.partFrac;
+
+
+
+    union Code b;
+    b.numero = op2;
+
+    int signoB = b.bitfield.sign;
+    int exponenteB = b.bitfield.expo;
+    int mantisaB = b.bitfield.partFrac;
+
+    cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
+    cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
+
+
+    *result = 3.14;
 }
