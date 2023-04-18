@@ -26,9 +26,12 @@ string IEEEOperations::translateDecToIEEE(float op)
 //    printf("Exponente: %u \n",a.bitfield.expo);
 //    printf("Parte Fraccionaria : %u \n", a.bitfield.partFrac);
 
+    //Transforma a bits el exponente
     std::bitset<8> exponenteBin(a.bitfield.expo);
+    //Transforma a bits la parte fraccionaria
     std::bitset<23> fraccionariaBin(a.bitfield.partFrac);
 
+    //Devuelve el numero en binario IEEE754
     return std::to_string(a.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
 }
 
@@ -51,26 +54,29 @@ string IEEEOperations::translateBinaryToHex(string bin)
 //Metodo de la suma
 void IEEEOperations::add()
 {
+    //TODO Creo que se puede separar en otro método para usar en suma, division y multiplicacion
     union Code a;
 
     a.numero = op1;
 
 
-    int signoA = a.bitfield.sign;
-    int exponenteA = a.bitfield.expo;
-    int mantisaA = a.bitfield.partFrac;
+    unsigned int signoA = a.bitfield.sign;
+    unsigned int exponenteA = a.bitfield.expo;
+    unsigned int mantisaA = a.bitfield.partFrac;
 
 
 
     union Code b;
     b.numero = op2;
 
-    int signoB = b.bitfield.sign;
-    int exponenteB = b.bitfield.expo;
-    int mantisaB = b.bitfield.partFrac;
+    unsigned int signoB = b.bitfield.sign;
+    unsigned int exponenteB = b.bitfield.expo;
+    unsigned int mantisaB = b.bitfield.partFrac;
 
     cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
     cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
+
+    //Numero para tests
     *result = 69;
 }
 
@@ -99,6 +105,7 @@ void IEEEOperations::multiply()
     cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
     cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
 
+    //Numero para tests
     *result = 777;
 }
 
@@ -128,6 +135,6 @@ void IEEEOperations::divide()
     cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
     cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
 
-
+    //Numero para tests
     *result = 3.14;
 }

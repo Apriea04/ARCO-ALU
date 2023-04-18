@@ -23,6 +23,7 @@ private:
 
 };
 
+//Union code para sacar el exponente, parte fraccionaria y mantisa de cada float (Sacado del .c de clase)
 union Code {
 
     struct{
