@@ -22,9 +22,9 @@ string IEEEOperations::translateDecToIEEE(float op)
     union Code a;
 
     a.numero = op;
-//    printf("Signo: %u \n",a.bitfield.sign);
-//    printf("Exponente: %u \n",a.bitfield.expo);
-//    printf("Parte Fraccionaria : %u \n", a.bitfield.partFrac);
+    //printf("Signo: %u \n",a.bitfield.sign);
+    //printf("Exponente: %u \n",a.bitfield.expo);
+    //printf("Parte Fraccionaria : %u \n", a.bitfield.partFrac);
 
     //Transforma a bits el exponente
     std::bitset<8> exponenteBin(a.bitfield.expo);
@@ -48,31 +48,51 @@ string IEEEOperations::translateBinaryToHex(string bin)
     return hexString;
 }
 
-
-
-
-//Metodo de la suma
-void IEEEOperations::add()
-{
-    //TODO Creo que se puede separar en otro método para usar en suma, division y multiplicacion
+void IEEEOperations::binaryTransform(){
     union Code a;
 
     a.numero = op1;
 
 
-    unsigned int signoA = a.bitfield.sign;
-    unsigned int exponenteA = a.bitfield.expo;
-    unsigned int mantisaA = a.bitfield.partFrac;
+    signoA = a.bitfield.sign;
+    exponenteA = a.bitfield.expo;
+    mantisaA = a.bitfield.partFrac;
 
 
 
     union Code b;
     b.numero = op2;
 
-    unsigned int signoB = b.bitfield.sign;
-    unsigned int exponenteB = b.bitfield.expo;
-    unsigned int mantisaB = b.bitfield.partFrac;
+    signoB = b.bitfield.sign;
+    exponenteB = b.bitfield.expo;
+    mantisaB = b.bitfield.partFrac;
+}
 
+
+
+
+//Metodo de la suma
+void IEEEOperations::add()
+{
+    //Metodo que saca mantisa, signo y exponente de A y B
+    binaryTransform();
+
+    //Paso 1
+    int g = 0;
+    int r = 0;
+    int st = 0;
+    int n = 24;
+    bool operandos_intercambiados = false;
+    bool complementado_P = false;
+
+    //Paso 2
+    if(exponenteA < exponenteB){
+        operandos_intercambiados = true;
+        //Intercambiamos los operandos
+    }
+
+
+    //Test
     cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
     cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
 
@@ -83,25 +103,10 @@ void IEEEOperations::add()
 //Metodo de la multiplicacion
 void IEEEOperations::multiply()
 {
+    //Metodo que saca mantisa, signo y exponente de A y B
+    binaryTransform();
 
-    union Code a;
-
-    a.numero = op1;
-
-
-    int signoA = a.bitfield.sign;
-    int exponenteA = a.bitfield.expo;
-    int mantisaA = a.bitfield.partFrac;
-
-
-
-    union Code b;
-    b.numero = op2;
-
-    int signoB = b.bitfield.sign;
-    int exponenteB = b.bitfield.expo;
-    int mantisaB = b.bitfield.partFrac;
-
+    //Test
     cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
     cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
 
@@ -114,24 +119,10 @@ void IEEEOperations::multiply()
 void IEEEOperations::divide()
 {
 
-    union Code a;
+    //Metodo que saca mantisa, signo y exponente de A y B
+    binaryTransform();
 
-    a.numero = op1;
-
-
-    int signoA = a.bitfield.sign;
-    int exponenteA = a.bitfield.expo;
-    int mantisaA = a.bitfield.partFrac;
-
-
-
-    union Code b;
-    b.numero = op2;
-
-    int signoB = b.bitfield.sign;
-    int exponenteB = b.bitfield.expo;
-    int mantisaB = b.bitfield.partFrac;
-
+    //Test
     cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
     cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
 

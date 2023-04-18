@@ -20,6 +20,13 @@ private:
     float op1;
     float op2;
     float *result;
+    unsigned int signoA;
+    unsigned int exponenteA;
+    unsigned int mantisaA;
+    unsigned int signoB;
+    unsigned int exponenteB;
+    unsigned int mantisaB;
+    void binaryTransform();
 
 };
 
