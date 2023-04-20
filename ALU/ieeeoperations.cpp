@@ -48,6 +48,7 @@ string IEEEOperations::translateBinaryToHex(string bin)
     return hexString;
 }
 
+//Este metodo parece que ya no se va a usar mas. TODO borrar si no se usa cuando acabemos
 void IEEEOperations::binaryTransform(){
     union Code a;
 
@@ -79,7 +80,7 @@ int IEEEOperations::complementoDos(int n) {
 void IEEEOperations::add()
 {
     //Metodo que saca mantisa, signo y exponente de A y B
-    binaryTransform();
+    //binaryTransform();
 
     Code a,b, result;
     a.numero = op1;
@@ -173,11 +174,12 @@ void IEEEOperations::add()
     }
 
     //Test
-    cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
-    cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
+    cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Mantisa A: "<<a.bitfield.partFrac<<endl;
+    cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Mantisa B: "<<b.bitfield.partFrac<<endl;
+    cout<<" Signo Result: "<<result.bitfield.sign<<" Exponente Result: "<<result.bitfield.expo<<" Mantisa Result: "<<result.bitfield.partFrac<<endl;
 
     //Numero para tests
-    *result = 69;
+    // *result = 69;
 }
 
 
