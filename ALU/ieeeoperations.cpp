@@ -69,13 +69,9 @@ void IEEEOperations::binaryTransform(){
 }
 
 //Metodo para calcular el complemento a 2 (Tengo serias dudas de que funcione bien)
-int IEEEOperations::complemento_a_dos(int n) {
-    if (n >= 0) {
-        return n;
-    }
-    else {
-        return ~(abs(n)) + 1;
-    }
+int IEEEOperations::complementoDos(int n) {
+    //Según ChatGPT, podemos negar un número con (~variable), luego el complemento a 2 es
+    return (~n) + 1;
 }
 
 
@@ -120,7 +116,7 @@ void IEEEOperations::add()
     //Paso 4
 
     if(exponenteA != exponenteB){
-        mantisaB = complemento_a_dos(mantisaB);
+        mantisaB = complementoDos(mantisaB);
     }
 
 

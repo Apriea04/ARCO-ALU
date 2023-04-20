@@ -27,7 +27,7 @@ private:
     unsigned int exponenteB;
     unsigned int mantisaB;
     void binaryTransform();
-    int complemento_a_dos(int n);
+    int complementoDos(int n);
 
 };
 
