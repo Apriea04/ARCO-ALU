@@ -1,4 +1,5 @@
 #include "ieeeoperations.h"
+#include <cmath>
 #include <iostream>
 #include <bitset>
 #include <sstream>
@@ -142,7 +143,7 @@ void IEEEOperations::add()
     //Paso 7
 
     if (b.bitfield.sign != a.bitfield.sign) {
-        unsigned int mask = (1u << (sizeof(unsigned int)*8 - d)) - 1;  // Creamos una máscara de bits que tenga 1 en las posiciones más altas y 0 en las posiciones más bajas
+        mask = (1u << (sizeof(unsigned int)*8 - d)) - 1;  // Creamos una máscara de bits que tenga 1 en las posiciones más altas y 0 en las posiciones más bajas
         p = p | (mask << d); // Desplazamos el valor de p d bits a la derecha e insertamos 1s en las posiciones más altas
     } else {
         p = p >> d;
@@ -154,8 +155,10 @@ void IEEEOperations::add()
     if (p & (1u << (sizeof(unsigned int)*8 -1))) {
         //Hubo un acarreo al final de la suma ya que este AND ya que no devuelve 0
         c = true; //c=1
+        mask = 0b100000000000000000000000;
     } else {
         c = false; //c = 0
+        mask = 0b011111111111111111111111;
     }
 
     //Paso 9
@@ -170,8 +173,60 @@ void IEEEOperations::add()
         st = g|r|st;
         r = p & 1u;
         p = p >> 1;
-        //TODO continuar
+        if (c) {
+            p = p|mask;
+        } else {
+            p = p&mask;
+        }
+        //Ajusto el exponente de la suma:
+        result.bitfield.expo += 1;
+    } else {
+        //Calculo cuantos bits tengo que desplazar P para que sea una mantisa normalizada.
+        // Para responder a eso, me basta con saber donde está el primer uno empezando por la izquierda.
+        // Eso se puede hacer con log2:
+        int k = 23;
+        k -= std::log2(p);
+
+        if (k == 0){
+            st = r|st;
+            r = g;
+        } else if (k>1) {
+            r=0;
+            st=0;
+        }
+
+        //Desplazar (P,g) a la izquierda k bits:
+        if (k != 0) { //Si k es 0, no hya nada que desplazar, no?? TODO
+            p = p <<1; //Desplazo P a la izquierda dejando un 0 al final
+            p = p | g; //Con el 0 hago un or para poner el valor de g
+            //Ya se ha desplazado p,g una unidad. Se hacen los desplazamientos restantes:
+            p = p << (k-1);
+        }
+        result.bitfield.expo -=k;
     }
+
+    //Paso 11
+    unsigned int p0 = p & 1;
+    if ((r==1 && st==1) || (r==1 && st==0 && p0 == 1)) {
+        p+=1;
+        if (c) { //Si hay acarreo, c=1
+            p = p >> 1; //Desplazo 1 bit a la derecha p
+            p = p | 0b100000000000000000000000; //Añado el uno del carry al principio
+            result.bitfield.expo += 1; //Ajustamos el exponente
+        }
+    }
+    result.mantisa=p;
+
+    //Paso 12
+    if ((operandos_intercambiados == false) && (complementado_P==true)) {
+        result.bitfield.sign = b.bitfield.sign;
+    } else {
+        result.bitfield.sign = a.bitfield.sign;
+    }
+
+    //Paso 13
+    //Recalculo el número, es decir, junto todos los campos de result. Recuerdo que hay q coger la parte fraccionaria de la mantisa
+    result.bitfield.partFrac = result.mantisa & 0b0111111111111111111111111;
 
     //Test
     cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Mantisa A: "<<a.bitfield.partFrac<<endl;
