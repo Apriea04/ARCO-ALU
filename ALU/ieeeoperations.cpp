@@ -81,52 +81,96 @@ void IEEEOperations::add()
     //Metodo que saca mantisa, signo y exponente de A y B
     binaryTransform();
 
+    Code a,b, result;
+    a.numero = op1;
+    b.numero = op2;
+
+    //Añadimos un uno a la izquierda de la parte fraccionaria de la mantisa:
+    unsigned int tempVal = 0;
+    tempVal |= a.bitfield.partFrac; //Colocamos la parte fraccionaria a la derecha
+    tempVal |= (1<<23); //Ponemos un uno a la izquierda
+    a.mantisa = tempVal; //Guardamos esa mantisa en a
+    tempVal |= b.bitfield.partFrac; //Colocamos la parte fraccionaria de b a la derecha
+    b.mantisa = tempVal; //Guardamos esa mantisa en b.
+
     //Paso 1
     int g = 0;
     int r = 0;
     int st = 0;
     int n = 24;
+    bool c= false; //Acarreo
     bool operandos_intercambiados = false;
     bool complementado_P = false;
 
 
     //Paso 2
-    if(exponenteA < exponenteB){
+    if(a.bitfield.expo < b.bitfield.expo){
         //Intercambiamos los operandos
-        unsigned int signoTemp = signoA;
-        unsigned int exponenteTemp = exponenteA;
-        unsigned int mantisaTemp = mantisaA;
-
-        signoA = signoB;
-        exponenteA = exponenteB;
-        mantisaA = mantisaB;
-
-        signoB = signoTemp;
-        exponenteB = exponenteTemp;
-        mantisaB = mantisaTemp;
+        Code tmp = a;
+        a = b;
+        b = tmp;
         operandos_intercambiados = true;
 
     }
 
     //Paso 3
 
-    unsigned int exponenteSuma = exponenteA;
-    unsigned int d = exponenteA - exponenteB;
+    result.bitfield.expo = a.bitfield.expo;
+    unsigned int d = a.bitfield.expo - b.bitfield.expo; //TODO funciona sin decirle que son 8bits?
 
     //Paso 4
 
-    if(exponenteA != exponenteB){
-        mantisaB = complementoDos(mantisaB);
+    if(a.bitfield.sign != b.bitfield.sign){
+        b.mantisa = complementoDos(b.mantisa);
     }
 
 
     //Paso 5
 
-    unsigned int p = mantisaB;
+    unsigned int p = b.bitfield.partFrac; //TODO funciona sin decirle que son 24 bits?
 
     //Paso 6
 
+    g = (p >> (d-1)) & 1;
+    r = (p >> (d-2)) & 1;
 
+    unsigned int mask (1u << (d+1));  // Creamos una máscara de bits que tenga 1 en las posiciones 0 a d, inclusive
+    unsigned int subset = p & mask;
+    st = (subset!=0) ? 1:0;
+
+    //Paso 7
+
+    if (b.bitfield.sign != a.bitfield.sign) {
+        unsigned int mask = (1u << (sizeof(unsigned int)*8 - d)) - 1;  // Creamos una máscara de bits que tenga 1 en las posiciones más altas y 0 en las posiciones más bajas
+        p = p | (mask << d); // Desplazamos el valor de p d bits a la derecha e insertamos 1s en las posiciones más altas
+    } else {
+        p = p >> d;
+    }
+
+    //Paso 8
+    p = p + a.mantisa;
+    //¿Se ha producido acarreo?
+    if (p & (1u << (sizeof(unsigned int)*8 -1))) {
+        //Hubo un acarreo al final de la suma ya que este AND ya que no devuelve 0
+        c = true; //c=1
+    } else {
+        c = false; //c = 0
+    }
+
+    //Paso 9
+
+    if (a.bitfield.sign != b.bitfield.sign && ((p>>23 & 1u) == 1) && (c==false)) {
+        p = complementoDos(p);
+        complementado_P = true;
+    }
+
+    //Paso 10
+    if (a.bitfield.sign == b.bitfield.sign && c) {
+        st = g|r|st;
+        r = p & 1u;
+        p = p >> 1;
+        //TODO continuar
+    }
 
     //Test
     cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
