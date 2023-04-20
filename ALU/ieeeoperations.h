@@ -41,6 +41,7 @@ union Code {
     }bitfield;
 
     float numero;
+    unsigned int mantisa : 24;
     unsigned int numerox;
 };
 
