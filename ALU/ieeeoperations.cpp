@@ -5,7 +5,7 @@
 #include <sstream>
 
 
-IEEEOperations::IEEEOperations(float op1, float op2, float *result)
+IEEEOperations::IEEEOperations(float op1, float op2)
 {
     this->op1 = op1;
     this->op2 = op2;
@@ -15,6 +15,14 @@ IEEEOperations::IEEEOperations(float op1, float op2, float *result)
 IEEEOperations::~IEEEOperations()
 {
 
+}
+
+
+float IEEEOperations::getResult(){
+    return this->result->numero;
+}
+string IEEEOperations::getIEEEResult(){
+    return std::to_string(this->result->bitfield.sign+this->result->bitfield.expo+this->result->bitfield.partFrac);
 }
 
 //Metodo que le pasas un float y devuelve el binario ieee754
@@ -76,6 +84,22 @@ int IEEEOperations::complementoDos(int n) {
     return (~n) + 1;
 }
 
+bool IEEEOperations::operandosIguales() {
+    return op1 == op2;
+}
+
+
+bool IEEEOperations::esOp1Denormal() {
+    Code a;
+    a.numero = op1;
+    return a.bitfield.expo == 0b00000000;
+}
+
+bool IEEEOperations::esOp2Denormal() {
+    Code b;
+    b.numero = op2;
+    return b.bitfield.expo == 0b00000000;
+}
 
 //Metodo de la suma
 void IEEEOperations::add()
@@ -83,7 +107,7 @@ void IEEEOperations::add()
     //Metodo que saca mantisa, signo y exponente de A y B
     //binaryTransform();
 
-    Code a,b, result;
+    union Code a,b, result;
     a.numero = op1;
     b.numero = op2;
 
@@ -95,6 +119,21 @@ void IEEEOperations::add()
     tempVal |= b.bitfield.partFrac; //Colocamos la parte fraccionaria de b a la derecha
     b.mantisa = tempVal; //Guardamos esa mantisa en b.
 
+    //Casos raros:
+    if (operandosIguales()) {
+        result.numero=0;
+    } else{
+
+        if (esOp1Denormal()) {
+            tempVal &= ~(1<<23); //Ponemos un cero a la izquierda
+            a.mantisa=tempVal;
+        }
+        if (esOp2Denormal()) {
+            tempVal &= ~(1<<23); //Ponemos un cero a la izquierda
+            b.mantisa=tempVal;
+        }
+    }
+
     //Paso 1
     int g = 0;
     int r = 0;
@@ -103,6 +142,8 @@ void IEEEOperations::add()
     bool c= false; //Acarreo
     bool operandos_intercambiados = false;
     bool complementado_P = false;
+    unsigned int unos = 0b111111111111111111111111;
+    unsigned int mask;
 
 
     //Paso 2
@@ -129,17 +170,22 @@ void IEEEOperations::add()
 
     //Paso 5
 
-    unsigned int p = b.bitfield.partFrac; //TODO funciona sin decirle que son 24 bits?
+    unsigned int p = b.mantisa; //TODO funciona sin decirle que son 24 bits?
 
     //Paso 6
+    if (d>=1) {
+        g = (p >> (d-1)) & 1;
+    }
+    if (d>=2) {
+        r = (p >> (d-2)) & 1;
+    }
 
-    g = (p >> (d-1)) & 1;
-    r = (p >> (d-2)) & 1;
+    if (d>=3) {
 
-    unsigned int mask (1u << (d+1));  // Creamos una máscara de bits que tenga 1 en las posiciones 0 a d, inclusive
-    unsigned int subset = p & mask;
-    st = (subset!=0) ? 1:0;
-
+        mask = (1u << (d+1));  // Creamos una máscara de bits que tenga 1 en las posiciones 0 a d, inclusive
+        unsigned int subset = p & mask;
+        st = (subset!=0) ? 1:0;
+    }
     //Paso 7
 
     if (b.bitfield.sign != a.bitfield.sign) {
@@ -151,9 +197,11 @@ void IEEEOperations::add()
 
     //Paso 8
     p = p + a.mantisa;
-    //¿Se ha producido acarreo?
-    if (p & (1u << (sizeof(unsigned int)*8 -1))) {
+
+    //¿Se ha producido desbordamiento? (un acarreo al final)
+    if (p>=16777216) { //Si p >= 2^24, es que ocupa 25 bits y el primero es un uno, esdecir, hubo desbordamiento y acarreo
         //Hubo un acarreo al final de la suma ya que este AND ya que no devuelve 0
+        p = p & 0b111111111111111111111111; //Me cargo ese uno que se añadió al producirse desbordamiento
         c = true; //c=1
         mask = 0b100000000000000000000000;
     } else {
@@ -215,7 +263,7 @@ void IEEEOperations::add()
             result.bitfield.expo += 1; //Ajustamos el exponente
         }
     }
-    result.mantisa=p;
+    //result.mantisa=p; //Falla
 
     //Paso 12
     if ((operandos_intercambiados == false) && (complementado_P==true)) {
@@ -225,16 +273,18 @@ void IEEEOperations::add()
     }
 
     //Paso 13
-    //Recalculo el número, es decir, junto todos los campos de result. Recuerdo que hay q coger la parte fraccionaria de la mantisa
-    result.bitfield.partFrac = result.mantisa & 0b0111111111111111111111111;
+    //Normalizo la mantisa
+    int normalizador = 23 - log2(p) + 1;
+    p= p<<normalizador;
+    result.bitfield.expo -= normalizador;
+    result.bitfield.partFrac = (p & 0x7FFFFF);
+
+    this->result = &result;
 
     //Test
     cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Mantisa A: "<<a.bitfield.partFrac<<endl;
     cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Mantisa B: "<<b.bitfield.partFrac<<endl;
     cout<<" Signo Result: "<<result.bitfield.sign<<" Exponente Result: "<<result.bitfield.expo<<" Mantisa Result: "<<result.bitfield.partFrac<<endl;
-
-    //Numero para tests
-    // *result = 69;
 }
 
 
@@ -253,7 +303,6 @@ void IEEEOperations::multiply()
     cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
 
     //Numero para tests
-    *result = 777;
 }
 
 
@@ -269,5 +318,4 @@ void IEEEOperations::divide()
     cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
 
     //Numero para tests
-    *result = 3.14;
 }

@@ -8,18 +8,20 @@ using namespace std;
 class IEEEOperations
 {
 public:
-    IEEEOperations(float op1, float op2, float *result);
+    IEEEOperations(float op1, float op2);
     ~IEEEOperations();
     string translateDecToIEEE(float op);
     string translateBinaryToHex(string bin);
     void add();
     void multiply();
     void divide();
+    float getResult();
+    string getIEEEResult();
 
 private:
     float op1;
     float op2;
-    float *result;
+    union Code *result;
     unsigned int signoA;
     unsigned int exponenteA;
     unsigned int mantisaA;
@@ -28,6 +30,9 @@ private:
     unsigned int mantisaB;
     void binaryTransform();
     int complementoDos(int n);
+    bool operandosIguales();
+    bool esOp1Denormal();
+    bool esOp2Denormal();
 
 };
 

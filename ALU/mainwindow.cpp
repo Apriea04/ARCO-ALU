@@ -30,14 +30,14 @@ void MainWindow::on_AddButton_clicked()
     //DecimalOperations dec = DecimalOperations(op1, op2, &result);
 
     //Creamos objeto ieee
-    IEEEOperations ieee = IEEEOperations(op1, op2, &result);
+    IEEEOperations ieee = IEEEOperations(op1, op2);
     //Llamada al metodo suma
     ieee.add();
     //Convertimos op1 y op2 a binario y lo recogemos como string
     string bin1 = ieee.translateDecToIEEE(op1);
     string bin2 = ieee.translateDecToIEEE(op2);
-    string binResult = ieee.translateDecToIEEE(result);
-    //ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
+    string binResult =ieee.getIEEEResult();
+    ui->ResultDecimal->setText(QString::number(ieee.getResult()));
 
     //Mostramos los numeros en binario
     ui->OP1IEEE->setText(QString::fromStdString(bin1));
@@ -48,7 +48,6 @@ void MainWindow::on_AddButton_clicked()
     ui->OP2Hex->setText(QString::fromStdString(ieee.translateBinaryToHex(bin2)));
     ui->ResultHex->setText(QString::fromStdString(ieee.translateBinaryToHex(binResult)));
     //Devolvemos la salida
-    ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
 }
 
 
@@ -60,18 +59,18 @@ void MainWindow::on_MultiplyButton_clicked()
 
     float op1 = ui->OP1Decimal->text().toFloat();
     float op2 = ui->OP2Decimal->text().toFloat();
-    float result;
+    union Code result;
 
     //DecimalOperations dec = DecimalOperations(op1, op2, &result);
 
     //Creamos objeto ieee
-    IEEEOperations ieee = IEEEOperations(op1, op2, &result);
+    IEEEOperations ieee = IEEEOperations(op1, op2);
     //Llamada al metodo suma
     ieee.multiply();
     //Convertimos op1 y op2 a binario y lo recogemos como string
     string bin1 = ieee.translateDecToIEEE(op1);
     string bin2 = ieee.translateDecToIEEE(op2);
-    string binResult = ieee.translateDecToIEEE(result);
+    string binResult = ieee.getIEEEResult();
     //ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
 
     //Mostramos los numeros en binario
@@ -83,7 +82,7 @@ void MainWindow::on_MultiplyButton_clicked()
     ui->OP2Hex->setText(QString::fromStdString(ieee.translateBinaryToHex(bin2)));
     ui->ResultHex->setText(QString::fromStdString(ieee.translateBinaryToHex(binResult)));
     //Devolvemos la salida
-    ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
+    ui->ResultDecimal->setText(QString::fromStdString(ieee.getIEEEResult()));
 }
 
 
@@ -100,13 +99,13 @@ void MainWindow::on_DivisionButton_clicked()
     //DecimalOperations dec = DecimalOperations(op1, op2, &result);
 
     //Creamos objeto ieee
-    IEEEOperations ieee = IEEEOperations(op1, op2, &result);
+    IEEEOperations ieee = IEEEOperations(op1, op2);
     //Llamada al metodo suma
     ieee.divide();
     //Convertimos op1 y op2 a binario y lo recogemos como string
     string bin1 = ieee.translateDecToIEEE(op1);
     string bin2 = ieee.translateDecToIEEE(op2);
-    string binResult = ieee.translateDecToIEEE(result);
+    string binResult = ieee.getIEEEResult();
     //ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
 
     //Mostramos los numeros en binario
