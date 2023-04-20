@@ -68,7 +68,15 @@ void IEEEOperations::binaryTransform(){
     mantisaB = b.bitfield.partFrac;
 }
 
-
+//Metodo para calcular el complemento a 2 (Tengo serias dudas de que funcione bien)
+int IEEEOperations::complemento_a_dos(int n) {
+    if (n >= 0) {
+        return n;
+    }
+    else {
+        return ~(abs(n)) + 1;
+    }
+}
 
 
 //Metodo de la suma
@@ -85,11 +93,43 @@ void IEEEOperations::add()
     bool operandos_intercambiados = false;
     bool complementado_P = false;
 
+
     //Paso 2
     if(exponenteA < exponenteB){
-        operandos_intercambiados = true;
         //Intercambiamos los operandos
+        unsigned int signoTemp = signoA;
+        unsigned int exponenteTemp = exponenteA;
+        unsigned int mantisaTemp = mantisaA;
+
+        signoA = signoB;
+        exponenteA = exponenteB;
+        mantisaA = mantisaB;
+
+        signoB = signoTemp;
+        exponenteB = exponenteTemp;
+        mantisaB = mantisaTemp;
+        operandos_intercambiados = true;
+
     }
+
+    //Paso 3
+
+    unsigned int exponenteSuma = exponenteA;
+    unsigned int d = exponenteA - exponenteB;
+
+    //Paso 4
+
+    if(exponenteA != exponenteB){
+        mantisaB = complemento_a_dos(mantisaB);
+    }
+
+
+    //Paso 5
+
+    unsigned int p = mantisaB;
+
+    //Paso 6
+
 
 
     //Test
@@ -99,6 +139,11 @@ void IEEEOperations::add()
     //Numero para tests
     *result = 69;
 }
+
+
+
+
+
 
 //Metodo de la multiplicacion
 void IEEEOperations::multiply()

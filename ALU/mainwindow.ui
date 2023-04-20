@@ -78,10 +78,18 @@
        </spacer>
       </item>
       <item row="15" column="1">
-       <widget class="QLineEdit" name="ResultDecimal"/>
+       <widget class="QLineEdit" name="ResultDecimal">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="7" column="5">
-       <widget class="QLineEdit" name="OP2Hex"/>
+       <widget class="QLineEdit" name="OP2Hex">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="5" column="0">
        <widget class="Line" name="line_3">
@@ -125,7 +133,11 @@
        </widget>
       </item>
       <item row="3" column="3">
-       <widget class="QLineEdit" name="OP1IEEE"/>
+       <widget class="QLineEdit" name="OP1IEEE">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="16" column="1">
        <spacer name="verticalSpacer_6">
@@ -141,7 +153,11 @@
        </spacer>
       </item>
       <item row="15" column="5">
-       <widget class="QLineEdit" name="ResultHex"/>
+       <widget class="QLineEdit" name="ResultHex">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="9" column="0">
        <widget class="Line" name="line_4">
@@ -151,7 +167,11 @@
        </widget>
       </item>
       <item row="15" column="3">
-       <widget class="QLineEdit" name="ResultIEEE"/>
+       <widget class="QLineEdit" name="ResultIEEE">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="15" column="4">
        <widget class="Line" name="line_2">
@@ -209,7 +229,11 @@
        </widget>
       </item>
       <item row="3" column="5">
-       <widget class="QLineEdit" name="OP1Hex"/>
+       <widget class="QLineEdit" name="OP1Hex">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="4" column="1">
        <spacer name="verticalSpacer_2">
@@ -286,7 +310,11 @@
        <widget class="QLineEdit" name="OP2Decimal"/>
       </item>
       <item row="7" column="3">
-       <widget class="QLineEdit" name="OP2IEEE"/>
+       <widget class="QLineEdit" name="OP2IEEE">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="16" column="3" colspan="3">
        <widget class="QLabel" name="label_9">
@@ -322,7 +350,7 @@
      <x>0</x>
      <y>0</y>
      <width>1071</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>
