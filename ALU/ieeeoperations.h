@@ -23,14 +23,15 @@ private:
     float op2;
     union Code *result;
 
+    unsigned int mantisaA : 24;
+    unsigned int mantisaB : 24;
+
     float salida;
 
     unsigned int signoA;
     unsigned int exponenteA;
-    unsigned int mantisaA;
     unsigned int signoB;
     unsigned int exponenteB;
-    unsigned int mantisaB;
     void binaryTransform();
     int complementoDos(int n);
     bool operandosOpuestos();
@@ -49,7 +50,6 @@ union Code {
     }bitfield;
 
     float numero;
-    unsigned int mantisa : 24;
     unsigned int numerox;
 };
 

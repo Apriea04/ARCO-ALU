@@ -112,13 +112,16 @@ void IEEEOperations::add()
     a.numero = op1;
     b.numero = op2;
 
+    mantisaA=0;
+    mantisaB=0;
+
     //Añadimos un uno a la izquierda de la parte fraccionaria de la mantisa:
     unsigned int tempVal = 0;
     tempVal |= a.bitfield.partFrac; //Colocamos la parte fraccionaria a la derecha
     tempVal |= (1<<23); //Ponemos un uno a la izquierda
-    a.mantisa = tempVal; //Guardamos esa mantisa en a
+    mantisaA = tempVal; //Guardamos esa mantisa en a
     tempVal |= b.bitfield.partFrac; //Colocamos la parte fraccionaria de b a la derecha
-    b.mantisa = tempVal; //Guardamos esa mantisa en b.
+    mantisaB = tempVal; //Guardamos esa mantisa en b.
 
     //Casos raros:
     if (operandosOpuestos()) {
@@ -130,11 +133,11 @@ void IEEEOperations::add()
 
         if (esOp1Denormal()) {
             tempVal &= ~(1<<23); //Ponemos un cero a la izquierda
-            a.mantisa=tempVal;
+            mantisaA =tempVal;
         }
         if (esOp2Denormal()) {
             tempVal &= ~(1<<23); //Ponemos un cero a la izquierda
-            b.mantisa=tempVal;
+            mantisaB=tempVal;
         }
     }
 
@@ -180,19 +183,19 @@ void IEEEOperations::add()
     cout<<"Paso 4: "<<endl;
 
     if(a.bitfield.sign != b.bitfield.sign){
-        b.mantisa = complementoDos(b.mantisa);
-        cout<<"Los signos no coinciden. Mantisa B: "<<b.mantisa<<endl;
+        mantisaB = complementoDos(mantisaB);
+        cout<<"Los signos no coinciden. Mantisa B: "<<mantisaB<<endl;
     }
     else{
         //La mantisa que da aquí es un poco rara
-        cout<<"Los signos coinciden. Mantisa B: "<<b.mantisa<<endl;
+        cout<<"Los signos coinciden. Mantisa B: "<<mantisaB<<endl;
     }
 
 
     //Paso 5
     cout<<"Paso 5: "<<endl;
 
-    unsigned int p = b.mantisa; //TODO funciona sin decirle que son 24 bits?
+    unsigned int p = mantisaB; //TODO funciona sin decirle que son 24 bits?
     cout<<"Valor de p: "<<p<<endl;
     //Paso 6
     cout<<"Paso 6: "<<endl;
@@ -226,7 +229,7 @@ void IEEEOperations::add()
 
     //Paso 8
     cout<<"Paso 8: "<<endl;
-    p = p + a.mantisa;
+    p = p + mantisaA;
 
     cout<<"Valor de p: "<<p<<endl;
 
