@@ -33,7 +33,7 @@ private:
     unsigned int mantisaB;
     void binaryTransform();
     int complementoDos(int n);
-    bool operandosIguales();
+    bool operandosOpuestos();
     bool esOp1Denormal();
     bool esOp2Denormal();
 

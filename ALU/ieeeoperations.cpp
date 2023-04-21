@@ -85,8 +85,8 @@ int IEEEOperations::complementoDos(int n) {
     return (~n) + 1;
 }
 
-bool IEEEOperations::operandosIguales() {
-    return op1 == op2;
+bool IEEEOperations::operandosOpuestos() {
+    return op1 == -op2;
 }
 
 
@@ -121,8 +121,11 @@ void IEEEOperations::add()
     b.mantisa = tempVal; //Guardamos esa mantisa en b.
 
     //Casos raros:
-    if (operandosIguales()) {
+    if (operandosOpuestos()) {
         result.numero=0;
+        salida = 0;
+        //TODO debería sobrar una de las dos líneas
+        return;
     } else{
 
         if (esOp1Denormal()) {
