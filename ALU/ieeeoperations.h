@@ -22,6 +22,9 @@ private:
     float op1;
     float op2;
     union Code *result;
+
+    float salida;
+
     unsigned int signoA;
     unsigned int exponenteA;
     unsigned int mantisaA;

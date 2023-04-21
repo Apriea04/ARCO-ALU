@@ -19,7 +19,8 @@ IEEEOperations::~IEEEOperations()
 
 
 float IEEEOperations::getResult(){
-    return this->result->numero;
+    //return this->result->numero;
+    return salida;
 }
 string IEEEOperations::getIEEEResult(){
     return std::to_string(this->result->bitfield.sign+this->result->bitfield.expo+this->result->bitfield.partFrac);
@@ -295,6 +296,8 @@ void IEEEOperations::add()
     cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Mantisa A: "<<a.bitfield.partFrac<<endl;
     cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Mantisa B: "<<b.bitfield.partFrac<<endl;
     cout<<" Signo Result: "<<result.bitfield.sign<<" Exponente Result: "<<result.bitfield.expo<<" Mantisa Result: "<<result.bitfield.partFrac<<endl;
+
+    salida = result.numero;
 }
 
 

@@ -33,11 +33,13 @@ void MainWindow::on_AddButton_clicked()
     IEEEOperations ieee = IEEEOperations(op1, op2);
     //Llamada al metodo suma
     ieee.add();
+
+    float salida = ieee.getResult();
     //Convertimos op1 y op2 a binario y lo recogemos como string
     string bin1 = ieee.translateDecToIEEE(op1);
     string bin2 = ieee.translateDecToIEEE(op2);
-    string binResult =ieee.getIEEEResult();
-    ui->ResultDecimal->setText(QString::number(ieee.getResult()));
+    string binResult =ieee.translateDecToIEEE(salida);
+    ui->ResultDecimal->setText(QString::number(salida));
 
     //Mostramos los numeros en binario
     ui->OP1IEEE->setText(QString::fromStdString(bin1));
