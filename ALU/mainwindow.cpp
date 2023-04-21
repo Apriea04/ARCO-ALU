@@ -25,7 +25,7 @@ void MainWindow::on_AddButton_clicked()
 
     float op1 = ui->OP1Decimal->text().toFloat();
     float op2 = ui->OP2Decimal->text().toFloat();
-    float result;
+    //float result;
 
     //DecimalOperations dec = DecimalOperations(op1, op2, &result);
 
@@ -61,7 +61,7 @@ void MainWindow::on_MultiplyButton_clicked()
 
     float op1 = ui->OP1Decimal->text().toFloat();
     float op2 = ui->OP2Decimal->text().toFloat();
-    union Code result;
+    //union Code result;
 
     //DecimalOperations dec = DecimalOperations(op1, op2, &result);
 
@@ -96,7 +96,7 @@ void MainWindow::on_DivisionButton_clicked()
 
     float op1 = ui->OP1Decimal->text().toFloat();
     float op2 = ui->OP2Decimal->text().toFloat();
-    float result;
+    //float result;
 
     //DecimalOperations dec = DecimalOperations(op1, op2, &result);
 
@@ -119,7 +119,7 @@ void MainWindow::on_DivisionButton_clicked()
     ui->OP2Hex->setText(QString::fromStdString(ieee.translateBinaryToHex(bin2)));
     ui->ResultHex->setText(QString::fromStdString(ieee.translateBinaryToHex(binResult)));
     //Devolvemos la salida
-    ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
+   // ui->ResultDecimal->setText(QString::fromStdString(to_string(result)));
 
 }
 

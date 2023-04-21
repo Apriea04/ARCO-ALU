@@ -1,4 +1,4 @@
-#include "ieeeoperations.h"
+ #include "ieeeoperations.h"
 #include <cmath>
 #include <iostream>
 #include <bitset>
@@ -137,6 +137,10 @@ void IEEEOperations::add()
 
     //Paso 1
     cout<<"Paso 1: "<<endl;
+
+    cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Fraccionaria A: "<<a.bitfield.partFrac<<endl;
+    cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Fraccionaria B: "<<b.bitfield.partFrac<<endl;
+
     int g = 0;
     int r = 0;
     int st = 0;
@@ -149,26 +153,36 @@ void IEEEOperations::add()
 
 
     //Paso 2
-    cout<<"Paso 2: "<<endl;
+    cout<<"Paso 2: Si a < b intercambiamos"<<endl;
     if(a.bitfield.expo < b.bitfield.expo){
         //Intercambiamos los operandos
         Code tmp = a;
         a = b;
         b = tmp;
         operandos_intercambiados = true;
-
     }
+    cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Fraccionaria A: "<<a.bitfield.partFrac<<endl;
+    cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Fraccionaria B: "<<b.bitfield.partFrac<<endl;
 
     //Paso 3
     cout<<"Paso 3: "<<endl;
+
     result.bitfield.expo = a.bitfield.expo;
-    unsigned int d = a.bitfield.expo - b.bitfield.expo; //TODO funciona sin decirle que son 8bits?
+    unsigned int d = a.bitfield.expo - b.bitfield.expo; //TODO funciona sin decirle que son 8bits? D: Creo que si, con el cout salen cosas decentes
+
+
+    cout<<"Exponente suma: "<<result.bitfield.expo<<" d: "<<d<<endl;
 
     //Paso 4
     cout<<"Paso 4: "<<endl;
 
     if(a.bitfield.sign != b.bitfield.sign){
         b.mantisa = complementoDos(b.mantisa);
+        cout<<"Los signos no coinciden. Mantisa B: "<<b.mantisa<<endl;
+    }
+    else{
+        //La mantisa que da aquí es un poco rara
+        cout<<"Los signos coinciden. Mantisa B: "<<b.mantisa<<endl;
     }
 
 
@@ -176,14 +190,16 @@ void IEEEOperations::add()
     cout<<"Paso 5: "<<endl;
 
     unsigned int p = b.mantisa; //TODO funciona sin decirle que son 24 bits?
-
+    cout<<"Valor de p: "<<p<<endl;
     //Paso 6
     cout<<"Paso 6: "<<endl;
     if (d>=1) {
         g = (p >> (d-1)) & 1;
+        cout<<"Valor de g cuando d >= 1: "<<g<<endl;
     }
     if (d>=2) {
         r = (p >> (d-2)) & 1;
+        cout<<"Valor de r cuando d >= 2: "<<r<<endl;
     }
 
     if (d>=3) {
@@ -191,19 +207,25 @@ void IEEEOperations::add()
         mask = (1u << (d+1));  // Creamos una máscara de bits que tenga 1 en las posiciones 0 a d, inclusive
         unsigned int subset = p & mask;
         st = (subset!=0) ? 1:0;
+        cout<<"Valor de mask cuando d >= 3: "<<mask<<endl<<"Valor de st: "<<st<<endl;
     }
     //Paso 7
     cout<<"Paso 7: "<<endl;
     if (b.bitfield.sign != a.bitfield.sign) {
         mask = (1u << (sizeof(unsigned int)*8 - d)) - 1;  // Creamos una máscara de bits que tenga 1 en las posiciones más altas y 0 en las posiciones más bajas
         p = p | (mask << d); // Desplazamos el valor de p d bits a la derecha e insertamos 1s en las posiciones más altas
+
+        cout<<"Valor de mask cuando signos de a y b no coinciden: "<<mask<<endl<<"Valor de p: "<<p<<endl;
     } else {
         p = p >> d;
+        cout<<"Si los valores coiniden: valor de p "<<p<<endl;
     }
 
     //Paso 8
     cout<<"Paso 8: "<<endl;
     p = p + a.mantisa;
+
+    cout<<"Valor de p: "<<p<<endl;
 
     //¿Se ha producido desbordamiento? (un acarreo al final)
     if (p>=16777216) { //Si p >= 2^24, es que ocupa 25 bits y el primero es un uno, esdecir, hubo desbordamiento y acarreo
@@ -211,6 +233,8 @@ void IEEEOperations::add()
         p = p & 0b111111111111111111111111; //Me cargo ese uno que se añadió al producirse desbordamiento
         c = true; //c=1
         mask = 0b100000000000000000000000;
+
+        cout<<"Hubo acarreo al final de la suma. Valor de p: "<<p<<" Valor de c: "<<c<<"Valor de mask: "<<mask<<endl;
     } else {
         c = false; //c = 0
         mask = 0b011111111111111111111111;
@@ -293,9 +317,9 @@ void IEEEOperations::add()
     this->result = &result;
 
     //Test
-    cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Mantisa A: "<<a.bitfield.partFrac<<endl;
-    cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Mantisa B: "<<b.bitfield.partFrac<<endl;
-    cout<<" Signo Result: "<<result.bitfield.sign<<" Exponente Result: "<<result.bitfield.expo<<" Mantisa Result: "<<result.bitfield.partFrac<<endl;
+    cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Fraccionaria A: "<<a.bitfield.partFrac<<endl;
+    cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Fraccionaria B: "<<b.bitfield.partFrac<<endl;
+    cout<<" Signo Result: "<<result.bitfield.sign<<" Exponente Result: "<<result.bitfield.expo<<" Fraccionaria Result: "<<result.bitfield.partFrac<<endl;
 
     salida = result.numero;
 }
