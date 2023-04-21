@@ -33,7 +33,7 @@ private:
     unsigned int signoB;
     unsigned int exponenteB;
     void binaryTransform();
-    int complementoDos(int n);
+    unsigned int complementoDos(unsigned int n);
     bool operandosOpuestos();
     bool esOp1Denormal();
     bool esOp2Denormal();

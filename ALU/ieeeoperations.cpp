@@ -80,9 +80,14 @@ void IEEEOperations::binaryTransform(){
 }
 
 //Metodo para calcular el complemento a 2 (Tengo serias dudas de que funcione bien)
-int IEEEOperations::complementoDos(int n) {
+unsigned int IEEEOperations::complementoDos(unsigned int n) {
     //Según ChatGPT, podemos negar un número con (~variable), luego el complemento a 2 es
-    return (~n) + 1;
+    unsigned int tmp = ~n +1; //Hago el complemento a 2
+    if (tmp > 0xFFFFFF) {
+        tmp %= 0xFFFFFF +1; //Lo dejo con 24 bits
+    }
+    return tmp;
+
 }
 
 bool IEEEOperations::operandosOpuestos() {
@@ -112,16 +117,8 @@ void IEEEOperations::add()
     a.numero = op1;
     b.numero = op2;
 
-    mantisaA=0;
-    mantisaB=0;
-
-    //Añadimos un uno a la izquierda de la parte fraccionaria de la mantisa:
-    unsigned int tempVal = 0;
-    tempVal |= a.bitfield.partFrac; //Colocamos la parte fraccionaria a la derecha
-    tempVal |= (1<<23); //Ponemos un uno a la izquierda
-    mantisaA = tempVal; //Guardamos esa mantisa en a
-    tempVal |= b.bitfield.partFrac; //Colocamos la parte fraccionaria de b a la derecha
-    mantisaB = tempVal; //Guardamos esa mantisa en b.
+    mantisaA=a.bitfield.partFrac | 0x800000;
+    mantisaB=b.bitfield.partFrac | 0x800000;
 
     //Casos raros:
     if (operandosOpuestos()) {
@@ -132,12 +129,10 @@ void IEEEOperations::add()
     } else{
 
         if (esOp1Denormal()) {
-            tempVal &= ~(1<<23); //Ponemos un cero a la izquierda
-            mantisaA =tempVal;
+            mantisaA &= 0b011111111111111111111111;
         }
         if (esOp2Denormal()) {
-            tempVal &= ~(1<<23); //Ponemos un cero a la izquierda
-            mantisaB=tempVal;
+            mantisaB &= 0b011111111111111111111111;
         }
     }
 
@@ -154,7 +149,6 @@ void IEEEOperations::add()
     bool c= false; //Acarreo
     bool operandos_intercambiados = false;
     bool complementado_P = false;
-    unsigned int unos = 0b111111111111111111111111;
     unsigned int mask;
 
 
@@ -165,6 +159,9 @@ void IEEEOperations::add()
         Code tmp = a;
         a = b;
         b = tmp;
+        mask = mantisaA;
+        mantisaA = mantisaB;
+        mantisaB = mask;
         operandos_intercambiados = true;
     }
     cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Fraccionaria A: "<<a.bitfield.partFrac<<endl;
@@ -217,7 +214,7 @@ void IEEEOperations::add()
     }
     //Paso 7
     cout<<"Paso 7: "<<endl;
-    if (b.bitfield.sign != a.bitfield.sign) {
+    if (b.bitfield.sign != a.bitfield.sign) { //TODO falla con 5.25 + -8
         mask = (1u << (sizeof(unsigned int)*8 - d)) - 1;  // Creamos una máscara de bits que tenga 1 en las posiciones más altas y 0 en las posiciones más bajas
         p = p | (mask << d); // Desplazamos el valor de p d bits a la derecha e insertamos 1s en las posiciones más altas
 
