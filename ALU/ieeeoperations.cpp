@@ -135,6 +135,7 @@ void IEEEOperations::add()
     }
 
     //Paso 1
+    cout<<"Paso 1: "<<endl;
     int g = 0;
     int r = 0;
     int st = 0;
@@ -147,6 +148,7 @@ void IEEEOperations::add()
 
 
     //Paso 2
+    cout<<"Paso 2: "<<endl;
     if(a.bitfield.expo < b.bitfield.expo){
         //Intercambiamos los operandos
         Code tmp = a;
@@ -157,11 +159,12 @@ void IEEEOperations::add()
     }
 
     //Paso 3
-
+    cout<<"Paso 3: "<<endl;
     result.bitfield.expo = a.bitfield.expo;
     unsigned int d = a.bitfield.expo - b.bitfield.expo; //TODO funciona sin decirle que son 8bits?
 
     //Paso 4
+    cout<<"Paso 4: "<<endl;
 
     if(a.bitfield.sign != b.bitfield.sign){
         b.mantisa = complementoDos(b.mantisa);
@@ -169,10 +172,12 @@ void IEEEOperations::add()
 
 
     //Paso 5
+    cout<<"Paso 5: "<<endl;
 
     unsigned int p = b.mantisa; //TODO funciona sin decirle que son 24 bits?
 
     //Paso 6
+    cout<<"Paso 6: "<<endl;
     if (d>=1) {
         g = (p >> (d-1)) & 1;
     }
@@ -187,7 +192,7 @@ void IEEEOperations::add()
         st = (subset!=0) ? 1:0;
     }
     //Paso 7
-
+    cout<<"Paso 7: "<<endl;
     if (b.bitfield.sign != a.bitfield.sign) {
         mask = (1u << (sizeof(unsigned int)*8 - d)) - 1;  // Creamos una máscara de bits que tenga 1 en las posiciones más altas y 0 en las posiciones más bajas
         p = p | (mask << d); // Desplazamos el valor de p d bits a la derecha e insertamos 1s en las posiciones más altas
@@ -196,6 +201,7 @@ void IEEEOperations::add()
     }
 
     //Paso 8
+    cout<<"Paso 8: "<<endl;
     p = p + a.mantisa;
 
     //¿Se ha producido desbordamiento? (un acarreo al final)
@@ -210,13 +216,14 @@ void IEEEOperations::add()
     }
 
     //Paso 9
-
+    cout<<"Paso 9: "<<endl;
     if (a.bitfield.sign != b.bitfield.sign && ((p>>23 & 1u) == 1) && (c==false)) {
         p = complementoDos(p);
         complementado_P = true;
     }
 
     //Paso 10
+    cout<<"Paso 10: "<<endl;
     if (a.bitfield.sign == b.bitfield.sign && c) {
         st = g|r|st;
         r = p & 1u;
@@ -254,6 +261,7 @@ void IEEEOperations::add()
     }
 
     //Paso 11
+    cout<<"Paso 11: "<<endl;
     unsigned int p0 = p & 1;
     if ((r==1 && st==1) || (r==1 && st==0 && p0 == 1)) {
         p+=1;
@@ -266,6 +274,7 @@ void IEEEOperations::add()
     //result.mantisa=p; //Falla
 
     //Paso 12
+    cout<<"Paso 12: "<<endl;
     if ((operandos_intercambiados == false) && (complementado_P==true)) {
         result.bitfield.sign = b.bitfield.sign;
     } else {
@@ -273,6 +282,7 @@ void IEEEOperations::add()
     }
 
     //Paso 13
+    cout<<"Paso 13: "<<endl;
     //Normalizo la mantisa
     int normalizador = 23 - log2(p) + 1;
     p= p<<normalizador;
