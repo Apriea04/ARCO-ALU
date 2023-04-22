@@ -90,6 +90,22 @@ unsigned int IEEEOperations::complementoDos(unsigned int n) {
 
 }
 
+unsigned int IEEEOperations::complementoUno(unsigned int n) {
+    //Según ChatGPT, podemos negar un número con (~variable), luego el complemento a 2 es
+    /**
+    unsigned int tmp = ~n ; //Hago el complemento a 2
+    if (tmp > 0xFFFFFF) {
+        tmp %= 0xFFFFFF; //Lo dejo con 24 bits
+    }
+    */
+
+    bitset<24> tmp{n};
+    tmp = ~tmp;
+    unsigned int negated = tmp.to_ullong();
+    return negated;
+
+}
+
 bool IEEEOperations::operandosOpuestos() {
     return op1 == -op2;
 }
@@ -194,6 +210,7 @@ void IEEEOperations::add()
 
     unsigned int p = mantisaB; //TODO funciona sin decirle que son 24 bits?
     cout<<"Valor de p: "<<p<<endl;
+
     //Paso 6
     cout<<"Paso 6: "<<endl;
     if (d>=1) {
@@ -215,9 +232,11 @@ void IEEEOperations::add()
     //Paso 7
     cout<<"Paso 7: "<<endl;
     if (b.bitfield.sign != a.bitfield.sign) { //TODO falla con 5.25 + -8
-        mask = (1u << (sizeof(unsigned int)*8 - d)) - 1;  // Creamos una máscara de bits que tenga 1 en las posiciones más altas y 0 en las posiciones más bajas
-        p = p | (mask << d); // Desplazamos el valor de p d bits a la derecha e insertamos 1s en las posiciones más altas
-
+        //mask = (1u << (sizeof(unsigned int)*8 - d)) - 1;  // Creamos una máscara de bits que tenga 1 en las posiciones más altas y 0 en las posiciones más bajas
+        //p = p | (mask << d); // Desplazamos el valor de p d bits a la derecha e insertamos 1s en las posiciones más altas
+        p = complementoUno(p);
+        p = p >> d;
+        p = complementoUno(p);
         cout<<"Valor de mask cuando signos de a y b no coinciden: "<<mask<<endl<<"Valor de p: "<<p<<endl;
     } else {
         p = p >> d;

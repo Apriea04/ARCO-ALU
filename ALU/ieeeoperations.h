@@ -34,6 +34,7 @@ private:
     unsigned int exponenteB;
     void binaryTransform();
     unsigned int complementoDos(unsigned int n);
+    unsigned int complementoUno(unsigned int n);
     bool operandosOpuestos();
     bool esOp1Denormal();
     bool esOp2Denormal();
