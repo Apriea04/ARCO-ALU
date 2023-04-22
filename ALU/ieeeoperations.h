@@ -35,6 +35,9 @@ private:
     void binaryTransform();
     unsigned int complementoDos(unsigned int n);
     unsigned int complementoUno(unsigned int n);
+    unsigned int multiplyWithoutSign(unsigned int a, unsigned int b, unsigned int *p);
+    bool checkOverflow(unsigned int *p);
+    bool checkUnderflow(unsigned int *p);
     bool operandosOpuestos();
     bool esOp1Denormal();
     bool esOp2Denormal();

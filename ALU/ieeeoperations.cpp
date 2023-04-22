@@ -348,20 +348,161 @@ void IEEEOperations::add()
 
 
 
+unsigned int IEEEOperations::multiplyWithoutSign(unsigned int a, unsigned int b, unsigned int *p)
+{
+    bool c = false;      // Acarreo
 
+    int n = 24;
+
+    for (int i = 0; i < n; i++)
+    {
+        // Parte 1
+        if(a%2==1)
+        {
+            p = p + b;
+            //¿Se ha producido desbordamiento? (un acarreo al final)
+            if (*p>=16777216) { //Si p >= 2^24, es que ocupa 25 bits y el primero es un uno, esdecir, hubo desbordamiento y acarreo
+                //Hubo un acarreo al final de la suma ya que este AND ya que no devuelve 0
+                *p = *p & 0b111111111111111111111111; //Me cargo ese uno que se añadió al producirse desbordamiento
+                c = true; //c=1
+
+            } else {
+                c = false; //c = 0
+            }
+        }
+        else
+        {
+            *p = *p + 0;
+        }
+
+        // Parte 2
+        a = a >> 1;
+
+        if(*p%2==1)
+        {
+            a = a | 0b100000000000000000000000;
+        }
+        else
+        {
+            a = a | 0b000000000000000000000000;
+        }
+
+        *p = *p >> 1;
+
+        if(c==true)
+        {
+            *p = *p | 0b100000000000000000000000;
+        }
+        else
+        {
+            *p = *p | 0b000000000000000000000000;
+        }
+    }
+
+    mantisaA = a;
+
+    return *p * 2^24 + a;
+}
+
+bool IEEEOperations::checkOverflow(unsigned int *p)
+{
+
+}
+
+bool IEEEOperations::checkUnderflow(unsigned int *p)
+{
+
+}
 
 
 //Metodo de la multiplicacion
 void IEEEOperations::multiply()
 {
     //Metodo que saca mantisa, signo y exponente de A y B
-    binaryTransform();
+    //binaryTransform();
 
-    //Test
-    cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;
-    cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
+    union Code a,b, result;
+    a.numero = op1;
+    b.numero = op2;
 
-    //Numero para tests
+    mantisaA=a.bitfield.partFrac | 0x800000;
+    mantisaB=b.bitfield.partFrac | 0x800000;
+
+    //Casos raros:
+    if (operandosOpuestos()) {
+        result.numero=0;
+        salida = 0;
+        //TODO debería sobrar una de las dos líneas
+        return;
+    } else{
+
+        if (esOp1Denormal()) {
+            mantisaA &= 0b011111111111111111111111;
+        }
+        if (esOp2Denormal()) {
+            mantisaB &= 0b011111111111111111111111;
+        }
+    }
+
+    //Paso 1
+    unsigned int p = 0;
+    int n = 24;
+    cout<<"Paso 1: "<<endl;
+
+    cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Fraccionaria A: "<<a.bitfield.partFrac<<endl;
+    cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Fraccionaria B: "<<b.bitfield.partFrac<<endl;
+
+    result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
+
+    result.bitfield.expo = a.bitfield.expo + b.bitfield.expo;
+
+    // Paso 1: Multiplicación binaria sin signo de las mantisas
+    unsigned int pa = multiplyWithoutSign(mantisaA, mantisaB, &p);
+
+
+    // Paso 2
+    if((p >> (n-1)) %2 == 0)
+    {
+        unsigned int val = (mantisaA << (n-1)) & 1;
+        mantisaA = mantisaA << (n-1);
+
+        p = p << 1;
+
+        if(val%2==1)
+        {
+
+            p = p + 1;
+        }
+        else{
+            p = p + 0;
+        }
+
+    }
+    else
+    {
+        result.bitfield.expo++;
+    }
+
+    // Paso 3: bit de redondeo
+    int r = (p >> (n-1)) & 1;
+
+    // Paso 4: bit sticky
+    unsigned int mask = (1u << (n-2));  // Creamos una máscara de bits que tenga 1 en las posiciones 0 a n-2, inclusive
+    unsigned int subset = p & mask;
+    int st = (subset!=0) ? 1:0;
+    cout<<"Valor de mask: "<<mask<<endl<<"Valor de st: "<<st<<endl;
+
+    // Paso 5: redondeo
+    if((r==1 && st==1) || (r==1 && r==0 && p%2==0))
+    {
+        p = p + 1;
+    }
+
+    // Comprobación de desbordamientos
+    bool overflow = checkOverflow(&p);
+    bool underflow = checkUnderflow(&p);
+
+    // Tratamiento de operandos denormales
 }
 
 
