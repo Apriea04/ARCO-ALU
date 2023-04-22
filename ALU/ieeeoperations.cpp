@@ -1,4 +1,4 @@
- #include "ieeeoperations.h"
+#include "ieeeoperations.h"
 #include <cmath>
 #include <iostream>
 #include <bitset>
@@ -138,9 +138,16 @@ void IEEEOperations::add()
 
     //Casos raros:
     if (operandosOpuestos()) {
-        result.numero=0;
-        salida = 0;
-        //TODO debería sobrar una de las dos líneas
+        if (a.bitfield.expo == 0xFF && a.bitfield.partFrac == 0) {
+            result.bitfield.expo = 0xFF;
+            result.bitfield.partFrac = 0x002000;
+            //Forzamos un NaN
+            salida = std::numeric_limits<float>::quiet_NaN();
+        } else {
+            result.numero=0;
+            salida = 0;
+            //TODO debería sobrar una de las dos líneas
+        }
         return;
     } else{
 
