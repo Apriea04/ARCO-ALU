@@ -348,7 +348,7 @@ void IEEEOperations::add()
 
 
 
-unsigned int IEEEOperations::multiplyWithoutSign(unsigned int a, unsigned int b, unsigned int *p)
+void IEEEOperations::multiplyWithoutSign(unsigned int a, unsigned int b, unsigned int *p)
 {
     bool c = false;      // Acarreo
 
@@ -401,7 +401,6 @@ unsigned int IEEEOperations::multiplyWithoutSign(unsigned int a, unsigned int b,
 
     mantisaA = a;
 
-    return *p * 2^24 + a;
 }
 
 bool IEEEOperations::checkOverflow(unsigned int *p)
@@ -457,7 +456,7 @@ void IEEEOperations::multiply()
     result.bitfield.expo = a.bitfield.expo + b.bitfield.expo;
 
     // Paso 1: Multiplicación binaria sin signo de las mantisas
-    unsigned int pa = multiplyWithoutSign(mantisaA, mantisaB, &p);
+    multiplyWithoutSign(mantisaA, mantisaB, &p);
 
 
     // Paso 2
@@ -493,7 +492,7 @@ void IEEEOperations::multiply()
     cout<<"Valor de mask: "<<mask<<endl<<"Valor de st: "<<st<<endl;
 
     // Paso 5: redondeo
-    if((r==1 && st==1) || (r==1 && r==0 && p%2==0))
+    if((r==1 && st==1) || (r==1 && st==0 && p%2==0))
     {
         p = p + 1;
     }
