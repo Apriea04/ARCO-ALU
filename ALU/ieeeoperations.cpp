@@ -5,6 +5,7 @@
 #include <sstream>
 
 
+//Constructor
 IEEEOperations::IEEEOperations(float op1, float op2)
 {
     this->op1 = op1;
@@ -12,6 +13,7 @@ IEEEOperations::IEEEOperations(float op1, float op2)
     this->result = result;
 }
 
+//Destructor
 IEEEOperations::~IEEEOperations()
 {
 

@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "ieeeoperations.h"
+#include "unioncode.h"
 
 using namespace std;
 

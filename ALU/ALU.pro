@@ -15,7 +15,8 @@ SOURCES += \
 
 HEADERS += \
     ieeeoperations.h \
-    mainwindow.h
+    mainwindow.h \
+    unioncode.h
 
 FORMS += \
     mainwindow.ui

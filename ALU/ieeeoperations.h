@@ -2,6 +2,7 @@
 #define IEEEOPERATIONS_H
 
 #include <string>
+#include "unioncode.h"
 
 using namespace std;
 
@@ -44,17 +45,6 @@ private:
 
 };
 
-//Union code para sacar el exponente, parte fraccionaria y mantisa de cada float (Sacado del .c de clase)
-union Code {
 
-    struct{
-        unsigned int partFrac : 23;
-        unsigned int expo : 8;
-        unsigned int sign : 1;
-    }bitfield;
-
-    float numero;
-    unsigned int numerox;
-};
 
 #endif // IEEEOPERATIONS_H
