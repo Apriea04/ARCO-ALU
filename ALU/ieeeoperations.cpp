@@ -6,11 +6,11 @@
 
 
 //Constructor
-IEEEOperations::IEEEOperations(float op1, float op2)
+IEEEOperations::IEEEOperations(union Code op1, union Code op2)
 {
     this->op1 = op1;
     this->op2 = op2;
-    this->result = result;
+    //this->result = result;
 }
 
 //Destructor
@@ -20,31 +20,26 @@ IEEEOperations::~IEEEOperations()
 }
 
 
-float IEEEOperations::getResult(){
-    //return this->result->numero;
+//Metodo que devuelve el resultado de una operacion
+union Code IEEEOperations::getResult(){
     return salida;
 }
-string IEEEOperations::getIEEEResult(){
-    return std::to_string(this->result->bitfield.sign+this->result->bitfield.expo+this->result->bitfield.partFrac);
-}
+
+
+//string IEEEOperations::getIEEEResult(){
+//    return std::to_string(this->result->bitfield.sign+this->result->bitfield.expo+this->result->bitfield.partFrac);
+//}
+
 
 //Metodo que le pasas un float y devuelve el binario ieee754
-string IEEEOperations::translateDecToIEEE(float op)
+string IEEEOperations::translateDecToIEEE(union Code op)
 {
-    union Code a;
-
-    a.numero = op;
-    //printf("Signo: %u \n",a.bitfield.sign);
-    //printf("Exponente: %u \n",a.bitfield.expo);
-    //printf("Parte Fraccionaria : %u \n", a.bitfield.partFrac);
-
     //Transforma a bits el exponente
-    std::bitset<8> exponenteBin(a.bitfield.expo);
+    std::bitset<8> exponenteBin(op.bitfield.expo);
     //Transforma a bits la parte fraccionaria
-    std::bitset<23> fraccionariaBin(a.bitfield.partFrac);
-
+    std::bitset<23> fraccionariaBin(op.bitfield.partFrac);
     //Devuelve el numero en binario IEEE754
-    return std::to_string(a.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
+    return std::to_string(op.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
 }
 
 //Metodo que le pasas un string en binario y te devuelve un string en hexadecimal
@@ -64,8 +59,8 @@ string IEEEOperations::translateBinaryToHex(string bin)
 void IEEEOperations::binaryTransform(){
     union Code a;
 
-    a.numero = op1;
-
+    //a.numero = op1;
+    op1 = a;
 
     signoA = a.bitfield.sign;
     exponenteA = a.bitfield.expo;
@@ -74,7 +69,8 @@ void IEEEOperations::binaryTransform(){
 
 
     union Code b;
-    b.numero = op2;
+    //b.numero = op2;
+    op2 = b;
 
     signoB = b.bitfield.sign;
     exponenteB = b.bitfield.expo;
@@ -102,19 +98,19 @@ unsigned int IEEEOperations::complementoUno(unsigned int n) {
 }
 
 bool IEEEOperations::operandosOpuestos() {
-    return op1 == -op2;
+    return op1.numero == -op2.numero;
 }
 
 
 bool IEEEOperations::esOp1Denormal() {
     Code a;
-    a.numero = op1;
+    a.numero = op1.numero;
     return a.bitfield.expo == 0b00000000;
 }
 
 bool IEEEOperations::esOp2Denormal() {
     Code b;
-    b.numero = op2;
+    b.numero = op2.numero;
     return b.bitfield.expo == 0b00000000;
 }
 
@@ -125,8 +121,8 @@ void IEEEOperations::add()
     //binaryTransform();
 
     union Code a,b, result;
-    a.numero = op1;
-    b.numero = op2;
+    a.numero = op1.numero;
+    b.numero = op2.numero;
 
     mantisaA=a.bitfield.partFrac | 0x800000;
     mantisaB=b.bitfield.partFrac | 0x800000;
@@ -137,10 +133,10 @@ void IEEEOperations::add()
             result.bitfield.expo = 0xFF;
             result.bitfield.partFrac = 0x002000;
             //Forzamos un NaN
-            salida = std::numeric_limits<float>::quiet_NaN();
+            salida.numero = std::numeric_limits<float>::quiet_NaN();
         } else {
             result.numero=0;
-            salida = 0;
+            salida.numero = 0;
             //TODO debería sobrar una de las dos líneas
         }
         return;
@@ -343,7 +339,7 @@ void IEEEOperations::add()
     cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Fraccionaria B: "<<b.bitfield.partFrac<<endl;
     cout<<" Signo Result: "<<result.bitfield.sign<<" Exponente Result: "<<result.bitfield.expo<<" Fraccionaria Result: "<<result.bitfield.partFrac<<endl;
 
-    salida = result.numero;
+    salida = result;
 }
 
 
@@ -402,8 +398,8 @@ void IEEEOperations::multiply()
     //binaryTransform();
 
     union Code a,b;
-    a.numero = op1;
-    b.numero = op2;
+    a.numero = op1.numero;
+    b.numero = op2.numero;
 
     this->mantisaA=a.bitfield.partFrac | 0x800000;
     this->mantisaB=b.bitfield.partFrac | 0x800000;
@@ -411,7 +407,7 @@ void IEEEOperations::multiply()
     //Casos raros:
     if (operandosOpuestos()) {
         result->numero=0;
-        salida = 0;
+        salida.numero = 0;
         //TODO debería sobrar una de las dos líneas
         return;
     } else{

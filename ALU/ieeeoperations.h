@@ -9,25 +9,25 @@ using namespace std;
 class IEEEOperations
 {
 public:
-    IEEEOperations(float op1, float op2);
+    IEEEOperations(union Code op1, union Code op2);
     ~IEEEOperations();
-    string translateDecToIEEE(float op);
+    string translateDecToIEEE(union Code op);
     string translateBinaryToHex(string bin);
     void add();
     void multiply();
     void divide();
-    float getResult();
+    union Code getResult();
     string getIEEEResult();
 
 private:
-    float op1;
-    float op2;
+    union Code op1;
+    union Code op2;
     union Code *result;
 
     unsigned int mantisaA : 24;
     unsigned int mantisaB : 24;
 
-    float salida;
+    union Code salida;
 
     unsigned int signoA;
     unsigned int exponenteA;
