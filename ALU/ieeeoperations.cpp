@@ -26,13 +26,8 @@ union Code IEEEOperations::getResult(){
 }
 
 
-//string IEEEOperations::getIEEEResult(){
-//    return std::to_string(this->result->bitfield.sign+this->result->bitfield.expo+this->result->bitfield.partFrac);
-//}
-
-
 //Metodo que le pasas un float y devuelve el binario ieee754
-string IEEEOperations::translateDecToIEEE(union Code op)
+string IEEEOperations::translateIEEE(union Code op)
 {
     //Transforma a bits el exponente
     std::bitset<8> exponenteBin(op.bitfield.expo);
@@ -42,9 +37,19 @@ string IEEEOperations::translateDecToIEEE(union Code op)
     return std::to_string(op.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
 }
 
-//Metodo que le pasas un string en binario y te devuelve un string en hexadecimal
-string IEEEOperations::translateBinaryToHex(string bin)
-{
+
+
+//Metodo que le pasas un union Code y devuelve el numero en hexadecimal
+string IEEEOperations::translateHex(union Code op){
+
+    //Transforma a bits el exponente
+    std::bitset<8> exponenteBin(op.bitfield.expo);
+    //Transforma a bits la parte fraccionaria
+    std::bitset<23> fraccionariaBin(op.bitfield.partFrac);
+    //Devuelve el numero en binario IEEE754
+    string bin = std::to_string(op.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
+
+
     // Convertir el string binario a un objeto bitset
     bitset<64> bitSet(bin);
 
@@ -53,28 +58,7 @@ string IEEEOperations::translateBinaryToHex(string bin)
     ss << hex << uppercase << bitSet.to_ullong();
     string hexString = ss.str();
     return hexString;
-}
 
-//Este metodo parece que ya no se va a usar mas. TODO borrar si no se usa cuando acabemos
-void IEEEOperations::binaryTransform(){
-    union Code a;
-
-    //a.numero = op1;
-    op1 = a;
-
-    signoA = a.bitfield.sign;
-    exponenteA = a.bitfield.expo;
-    mantisaA = a.bitfield.partFrac;
-
-
-
-    union Code b;
-    //b.numero = op2;
-    op2 = b;
-
-    signoB = b.bitfield.sign;
-    exponenteB = b.bitfield.expo;
-    mantisaB = b.bitfield.partFrac;
 }
 
 //Metodo para calcular el complemento a 2 (Tengo serias dudas de que funcione bien)
@@ -383,7 +367,8 @@ unsigned int IEEEOperations::multiplyWithoutSign()
 
         c = false; //Al desplazar, en c entra un 0
     }
-
+    //Return para quitar el warning
+    return 0;
 }
 
 bool IEEEOperations::checkOverflow()
@@ -523,8 +508,6 @@ void IEEEOperations::multiply()
 void IEEEOperations::divide()
 {
 
-    //Metodo que saca mantisa, signo y exponente de A y B
-    binaryTransform();
 
     //Test
     cout<<" Signo A: "<<signoA<<" Exponente A: "<<exponenteA<<" Mantisa A: "<<mantisaA<<endl;

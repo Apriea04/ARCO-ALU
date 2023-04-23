@@ -11,13 +11,12 @@ class IEEEOperations
 public:
     IEEEOperations(union Code op1, union Code op2);
     ~IEEEOperations();
-    string translateDecToIEEE(union Code op);
-    string translateBinaryToHex(string bin);
+    string translateIEEE(union Code op);
+    string translateHex(union Code op);
     void add();
     void multiply();
     void divide();
     union Code getResult();
-    string getIEEEResult();
 
 private:
     union Code op1;
@@ -33,7 +32,6 @@ private:
     unsigned int exponenteA;
     unsigned int signoB;
     unsigned int exponenteB;
-    void binaryTransform();
     unsigned int complementoDos(unsigned int n);
     unsigned int complementoUno(unsigned int n);
     unsigned int multiplyWithoutSign();
