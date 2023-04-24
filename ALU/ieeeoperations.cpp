@@ -509,4 +509,5 @@ void IEEEOperations::divide()
     cout<<" Signo B: "<<signoB<<" Exponente B: "<<exponenteB<<" Mantisa B: "<<mantisaB<<endl;
 
     //Numero para tests
+    result.numero = 33;
 }
