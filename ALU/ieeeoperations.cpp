@@ -22,7 +22,7 @@ IEEEOperations::~IEEEOperations()
 
 //Metodo que devuelve el resultado de una operacion
 union Code IEEEOperations::getResult(){
-    return salida;
+    return result;
 }
 
 
@@ -105,8 +105,8 @@ bool IEEEOperations::esOp2Denormal() {
 //Metodo de la suma
 void IEEEOperations::add()
 {
-
-    union Code a,b, result;
+    result.numero = 0;
+    union Code a,b;
     a.numero = op1.numero;
     b.numero = op2.numero;
 
@@ -119,11 +119,9 @@ void IEEEOperations::add()
             result.bitfield.expo = 0xFF;
             result.bitfield.partFrac = 0x002000;
             //Forzamos un NaN
-            salida.numero = std::numeric_limits<float>::quiet_NaN();
+            result.numero = std::numeric_limits<float>::quiet_NaN();
         } else {
             result.numero=0;
-            salida.numero = 0;
-            //TODO debería sobrar una de las dos líneas
         }
         return;
     } else{
@@ -318,14 +316,12 @@ void IEEEOperations::add()
     result.bitfield.expo -= normalizador;
     result.bitfield.partFrac = (p & 0x7FFFFF);
 
-    this->result = &result;
 
     //Test
     cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Fraccionaria A: "<<a.bitfield.partFrac<<endl;
     cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Fraccionaria B: "<<b.bitfield.partFrac<<endl;
     cout<<" Signo Result: "<<result.bitfield.sign<<" Exponente Result: "<<result.bitfield.expo<<" Fraccionaria Result: "<<result.bitfield.partFrac<<endl;
 
-    salida = result;
 }
 
 
@@ -375,14 +371,13 @@ unsigned int IEEEOperations::multiplyWithoutSign()
 
 bool IEEEOperations::checkOverflow()
 {
-    return this->result->bitfield.expo>254;
+    return this->result.bitfield.expo>254;
 }
 
 //Metodo de la multiplicacion
 void IEEEOperations::multiply()
 {
-    //Metodo que saca mantisa, signo y exponente de A y B
-    //binaryTransform();
+    result.numero = 0;
 
     union Code a,b;
     a.numero = op1.numero;
@@ -393,9 +388,7 @@ void IEEEOperations::multiply()
 
     //Casos raros:
     if (operandosOpuestos()) {
-        result->numero=0;
-        salida.numero = 0;
-        //TODO debería sobrar una de las dos líneas
+        result.numero=0;
         return;
     } else{
 
@@ -415,9 +408,9 @@ void IEEEOperations::multiply()
     cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Fraccionaria A: "<<a.bitfield.partFrac<<endl;
     cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Fraccionaria B: "<<b.bitfield.partFrac<<endl;
 
-    result->bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
+    result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
 
-    result->bitfield.expo = a.bitfield.expo + b.bitfield.expo;
+    result.bitfield.expo = a.bitfield.expo + b.bitfield.expo;
 
     // Paso 1: Multiplicación binaria sin signo de las mantisas
     p = multiplyWithoutSign(); //En mantisaA está A y en p, P.
@@ -439,7 +432,7 @@ void IEEEOperations::multiply()
     }
     else
     {
-        result->bitfield.expo++;
+        result.bitfield.expo++;
     }
 
     // Paso 3: bit de redondeo
@@ -464,25 +457,25 @@ void IEEEOperations::multiply()
 
     if (overflow) {
         //Convertimos el número en infinito
-        this->result->bitfield.expo=255;
-        this->result->bitfield.partFrac = 0;
+        this->result.bitfield.expo=255;
+        this->result.bitfield.partFrac = 0;
     }
     //Underflow y punto 1 operandos denormales
-    if (this->result->bitfield.expo < 1) {
-        int t = 1 - result->bitfield.expo;
+    if (this->result.bitfield.expo < 1) {
+        int t = 1 - result.bitfield.expo;
         if (t >= 24){ //la mantisa tiene 24 bits
             //Underflow --> convertimos el número en 0
-            this->result->numero = 0;
+            this->result.numero = 0;
         } else {
             // TODO: Teóricamente hay que desplazar P,A t bits a la derecha, pero si luego solo vamos a utilizar P, ¿para qué tener en cuenta a A?
             p = p>>t;
-            this->result->bitfield.expo = 0; //Resultado denormal
+            this->result.bitfield.expo = 0; //Resultado denormal
         }
     }
     // Tratamiento de operandos denormales
     if (esOp1Denormal() || esOp2Denormal()) {
-        if (this->result->bitfield.expo > 1) { //TODO el exponente mínimo es 1?
-            unsigned int t1 = this->result->bitfield.expo - 1;
+        if (this->result.bitfield.expo > 1) { //TODO el exponente mínimo es 1?
+            unsigned int t1 = this->result.bitfield.expo - 1;
 
             int k = 23;
             unsigned long p2 = p;
@@ -496,12 +489,12 @@ void IEEEOperations::multiply()
                 t = t2;
             }
 
-            this->result->bitfield.expo = this->result->bitfield.expo -t;
+            this->result.bitfield.expo = this->result.bitfield.expo -t;
             p2 = p2 >> (24-t); //Esto es lo mismo que desplazar aritméticamente (P,A) t bits a la izda. TODO: Seguro?
             p = p2;
         }
     }
-    result->bitfield.partFrac = (p & 0x7FFFFF);
+    result.bitfield.partFrac = (p & 0x7FFFFF);
 
 }
 

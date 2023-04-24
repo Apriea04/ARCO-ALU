@@ -21,7 +21,7 @@ public:
 private:
     union Code op1;
     union Code op2;
-    union Code *result;
+    union Code result;
 
     unsigned int mantisaA : 24;
     unsigned int mantisaB : 24;
