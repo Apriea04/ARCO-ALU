@@ -41,6 +41,11 @@ private:
     bool esOp1Denormal();
     bool esOp2Denormal();
 
+    //Metodos para debug
+    string intBinario(unsigned int op);
+    string intHex(unsigned int  op);
+
+
 };
 
 

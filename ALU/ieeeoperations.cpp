@@ -26,7 +26,51 @@ union Code IEEEOperations::getResult(){
 }
 
 
-//Metodo que le pasas un float y devuelve el binario ieee754
+//Metodoo para debug
+//Metodo que le pasas un int y devuelve el binario ieee754
+string IEEEOperations::intBinario(unsigned int op)
+{
+    union Code x;
+    x.numero = op;
+    //Transforma a bits el exponente
+    std::bitset<8> exponenteBin(x.bitfield.expo);
+    //Transforma a bits la parte fraccionaria
+    std::bitset<23> fraccionariaBin(x.bitfield.partFrac);
+    //Devuelve el numero en binario IEEE754
+    return std::to_string(x.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
+}
+
+//Metodoo para debug
+//Metodo que le pasas un union Code y devuelve el numero en hexadecimal
+string IEEEOperations::intHex(unsigned int  op){
+
+    union Code x;
+    x.numero = op;
+
+    //Transforma a bits el exponente
+    std::bitset<8> exponenteBin(x.bitfield.expo);
+    //Transforma a bits la parte fraccionaria
+    std::bitset<23> fraccionariaBin(x.bitfield.partFrac);
+    //Devuelve el numero en binario IEEE754
+    string bin = std::to_string(x.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
+
+
+    // Convertir el string binario a un objeto bitset
+    bitset<64> bitSet(bin);
+
+    // Convertir el objeto bitset a un número hexadecimal en un stringstream
+    stringstream ss;
+    ss << hex << uppercase << bitSet.to_ullong();
+    string hexString = ss.str();
+    return hexString;
+
+}
+
+
+
+
+
+//Metodo que le pasas un union code y devuelve el binario ieee754
 string IEEEOperations::translateIEEE(union Code op)
 {
     //Transforma a bits el exponente
