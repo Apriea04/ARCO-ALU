@@ -72,6 +72,7 @@ unsigned int IEEEOperations::complementoDos(unsigned int n) {
 
 }
 
+//Metodo para calcular el complemento a 1
 unsigned int IEEEOperations::complementoUno(unsigned int n) {
 
     bitset<24> tmp{n};
@@ -81,17 +82,20 @@ unsigned int IEEEOperations::complementoUno(unsigned int n) {
 
 }
 
+//Metodo que comprueba si dos operandos son opuestos
 bool IEEEOperations::operandosOpuestos() {
     return op1.numero == -op2.numero;
 }
 
 
+//Metodo que comprueba si op1 es denormal
 bool IEEEOperations::esOp1Denormal() {
     Code a;
     a.numero = op1.numero;
     return a.bitfield.expo == 0b00000000;
 }
 
+//Metodo que comprueba si op2 es denormal
 bool IEEEOperations::esOp2Denormal() {
     Code b;
     b.numero = op2.numero;
@@ -101,8 +105,6 @@ bool IEEEOperations::esOp2Denormal() {
 //Metodo de la suma
 void IEEEOperations::add()
 {
-    //Metodo que saca mantisa, signo y exponente de A y B
-    //binaryTransform();
 
     union Code a,b, result;
     a.numero = op1.numero;
