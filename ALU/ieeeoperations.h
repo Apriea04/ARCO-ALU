@@ -3,6 +3,10 @@
 
 #include <string>
 #include "unioncode.h"
+#include <cmath>
+#include <iostream>
+#include <bitset>
+#include <sstream>
 
 using namespace std;
 
@@ -15,6 +19,7 @@ public:
     string translateHex(union Code op);
     void add();
     void multiply();
+    void multiplyA();
     void divide();
     union Code getResult();
 
@@ -34,7 +39,7 @@ private:
     unsigned int exponenteB;
     unsigned int complementoDos(unsigned int n);
     unsigned int complementoUno(unsigned int n);
-    unsigned int multiplyWithoutSign();
+    unsigned int multiplyWithoutSign(bitset<24> *MA, bitset<24> MB);
     bool checkOverflow();
     bool checkUnderflow();
     bool operandosOpuestos();

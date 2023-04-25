@@ -1,8 +1,5 @@
 #include "ieeeoperations.h"
-#include <cmath>
-#include <iostream>
-#include <bitset>
-#include <sstream>
+
 
 
 //Constructor
@@ -369,8 +366,69 @@ void IEEEOperations::add()
 }
 
 
-unsigned int IEEEOperations::multiplyWithoutSign()
+unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
 {
+
+    //Paso 1
+    // Almacenar valores en los registros A, B y P
+    bitset<24> P{0};
+    int n = 24;
+    bool c = false; // Acarreo
+
+    cout << MA->to_string() <<endl;
+    cout << MA->test(0)<<endl;
+
+    for (int i = 0; i < n; i++)
+    {
+        // Paso 1.1
+        if(MA->test(0))
+        {
+            P = bitset<24>{P.to_ullong() + MB.to_ullong()};
+        }
+
+        //¿Se ha producido desbordamiento? (un acarreo al final)
+        if (P.to_ullong()>=0xFFFFFF) { //Si p >= 2^24, es que ocupa 25 bits y el primero es un uno, esdecir, hubo desbordamiento y acarreo
+            //Hubo un acarreo al final de la suma ya que este AND ya que no devuelve 0
+            P = P.to_ullong() & 0b111111111111111111111111; //Me cargo ese uno que se añadió al producirse desbordamiento
+            c = true; //c=1
+            cout<<"Hubo acarreo al final de la suma. Valor de p: "<<P.to_string()<<" Valor de c: "<<c<<endl;
+        }
+        else
+        {
+            c = false;
+        }
+
+        // Paso 1.2
+        // Desplazar 1 bit a la derecha (c,P,A)
+
+        *MA = bitset<24>{MA->to_ullong() >> 1};
+
+        if(P.test(0))
+        {
+            MA->set(n-1);
+        }
+        else
+        {
+            MA->reset(n-1);
+        }
+
+        P = P >> 1;
+
+        if(c)
+        {
+            P.set(n-1);
+        }
+        else
+        {
+            P.reset(n-1);
+        }
+    }
+
+    // Paso 3: Devolver
+    return P.to_ullong();
+
+
+    /**
     bool c = false;      // Acarreo
     unsigned int p= 0;
     int n = 24;
@@ -411,6 +469,7 @@ unsigned int IEEEOperations::multiplyWithoutSign()
     }
     //Return para quitar el warning
     return 0;
+    */
 }
 
 bool IEEEOperations::checkOverflow()
@@ -418,8 +477,109 @@ bool IEEEOperations::checkOverflow()
     return this->result.bitfield.expo>254;
 }
 
+bool IEEEOperations::checkUnderflow()
+{
+
+    return this->result.bitfield.expo<1;
+}
+
 //Metodo de la multiplicacion
+
 void IEEEOperations::multiply()
+{
+    union Code a, b;
+    a.numero = op1.numero;
+    b.numero = op2.numero;
+    int n = 24;
+
+    bitset<24>mA{a.bitfield.partFrac};
+    bitset<24>mB{b.bitfield.partFrac};
+
+    // Paso 1
+    // Signo del producto
+    result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
+
+
+    // Paso 2
+    // Exponente del producto
+    result.bitfield.expo = a.bitfield.expo + b.bitfield.expo;
+
+
+    // Paso 3
+    // 3.1 Mantisa del producto
+    cout << "A: " << mA.to_string() << endl;
+    bitset<24>P{multiplyWithoutSign(&mA, mB)};
+    cout<<"P: " << P.to_string() << " A: " << mA.to_string() << endl;
+
+    // 3.2 Desplazar (P,A) 1 bit a la izquierda o sumar 1 al exponente
+    if(!P.test(n-1))
+    {
+        P = bitset<24>{P << 1};
+        if(mA.test(n-1))
+        {
+            P.set(0);
+        }
+        else
+        {
+            P.reset(0);
+        }
+
+        mA = bitset<24>{mA << 1};
+    }
+    else
+    {
+        result.bitfield.expo++;
+    }
+
+    // 3.3 Bit redondeo
+    bool r = mA.test(n-1);
+
+    // 3.4 Bit sticky
+    bool st = false;
+
+    for (int i = 0; i < n; i++)
+    {
+        if(mA.test(i))
+        {
+            st = true;
+            break;
+        }
+    }
+
+    // 3.5 Redondeo
+    if((r==true && st==true) || (r==true && st==false && P.test(0)))
+    {
+        P = bitset<24>{P.to_ullong()+1};
+    }
+
+    // Comprobación desbordamientos
+    if(checkOverflow())
+    {
+
+    }
+
+    if(checkUnderflow())
+    {
+        unsigned int t = 1-result.bitfield.expo;
+
+        if(t >= n)
+        {
+
+        }
+    }
+
+    // Tratamiento específico con operandos subnormales
+
+    // Mantisa final
+    result.bitfield.partFrac = P.to_ullong();
+
+
+
+
+}
+
+
+void IEEEOperations::multiplyA()
 {
     result.numero = 0;
 
@@ -457,7 +617,7 @@ void IEEEOperations::multiply()
     result.bitfield.expo = a.bitfield.expo + b.bitfield.expo;
 
     // Paso 1: Multiplicación binaria sin signo de las mantisas
-    p = multiplyWithoutSign(); //En mantisaA está A y en p, P.
+    //p = multiplyWithoutSign(); //En mantisaA está A y en p, P.
 
 
     // Paso 2
