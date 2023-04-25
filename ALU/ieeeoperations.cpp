@@ -110,7 +110,7 @@ unsigned int IEEEOperations::complementoDos(unsigned int n) {
     //Según ChatGPT, podemos negar un número con (~variable), luego el complemento a 2 es
     unsigned int tmp = ~n +1; //Hago el complemento a 2
     if (tmp > 0xFFFFFF) {
-        tmp %= 0xFFFFFF +1; //Lo dejo con 24 bits
+        tmp &= 0xFFFFFF; //Lo dejo con 24 bits
     }
     return tmp;
 
@@ -147,9 +147,9 @@ bool IEEEOperations::esOp2Denormal() {
 }
 
 //Metodo de la suma
+
 void IEEEOperations::add()
 {
-    result.numero = 0;
     union Code a,b;
     a.numero = op1.numero;
     b.numero = op2.numero;
@@ -158,24 +158,27 @@ void IEEEOperations::add()
     mantisaB=b.bitfield.partFrac | 0x800000;
 
     //Casos raros:
+    //TODO reformatear esto
     if (operandosOpuestos()) {
         if (a.bitfield.expo == 0xFF && a.bitfield.partFrac == 0) {
             result.bitfield.expo = 0xFF;
-            result.bitfield.partFrac = 0x002000;
-            //Forzamos un NaN
-            result.numero = std::numeric_limits<float>::quiet_NaN();
+            result.bitfield.sign = a.bitfield.sign;
+            result.bitfield.partFrac = 0x0;
+            //Forzamos un inf
         } else {
             result.numero=0;
         }
         return;
-    } else{
-
-        if (esOp1Denormal()) {
-            mantisaA &= 0b011111111111111111111111;
-        }
-        if (esOp2Denormal()) {
-            mantisaB &= 0b011111111111111111111111;
-        }
+    } if (esOp1Denormal()) {
+        mantisaA &= 0x7FFFFF;
+    }
+    if (esOp2Denormal()) {
+        mantisaB &= 0x7FFFFF;
+    } if (a.bitfield.expo == 0xFF && a.bitfield.partFrac == 0) {
+        result.bitfield.expo = 0xFF;
+        result.bitfield.sign = a.bitfield.sign;
+        result.bitfield.partFrac = 0x0; //Si op1 es inf, el resultado tb
+        return;
     }
 
     //Paso 1
@@ -187,8 +190,7 @@ void IEEEOperations::add()
     int g = 0;
     int r = 0;
     int st = 0;
-    int n = 24;
-    bool c= false; //Acarreo
+    bool c; //Acarreo
     bool operandos_intercambiados = false;
     bool complementado_P = false;
     unsigned int mask;
@@ -206,14 +208,12 @@ void IEEEOperations::add()
         mantisaB = mask;
         operandos_intercambiados = true;
     }
-    cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Fraccionaria A: "<<a.bitfield.partFrac<<endl;
-    cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Fraccionaria B: "<<b.bitfield.partFrac<<endl;
 
     //Paso 3
     cout<<"Paso 3: "<<endl;
 
     result.bitfield.expo = a.bitfield.expo;
-    unsigned int d = a.bitfield.expo - b.bitfield.expo; //TODO funciona sin decirle que son 8bits? D: Creo que si, con el cout salen cosas decentes
+    int d = a.bitfield.expo - b.bitfield.expo;
 
 
     cout<<"Exponente suma: "<<result.bitfield.expo<<" d: "<<d<<endl;
@@ -225,16 +225,11 @@ void IEEEOperations::add()
         mantisaB = complementoDos(mantisaB);
         cout<<"Los signos no coinciden. Mantisa B: "<<mantisaB<<endl;
     }
-    else{
-        //La mantisa que da aquí es un poco rara
-        cout<<"Los signos coinciden. Mantisa B: "<<mantisaB<<endl;
-    }
-
 
     //Paso 5
     cout<<"Paso 5: "<<endl;
 
-    unsigned int p = mantisaB; //TODO funciona sin decirle que son 24 bits?
+    unsigned int p = mantisaB;
     cout<<"Valor de p: "<<p<<endl;
 
     //Paso 6
@@ -250,9 +245,13 @@ void IEEEOperations::add()
 
     if (d>=3) {
 
-        mask = (1u << (d+1));  // Creamos una máscara de bits que tenga 1 en las posiciones 0 a d, inclusive
-        unsigned int subset = p & mask;
-        st = (subset!=0) ? 1:0;
+        unsigned int tmp = p;
+
+        for (int i = 0; i<d-3; i++) {
+            st |= (tmp & 0b1); //Hacemos un or con el último bit de tmp
+            tmp = tmp >> 1; //Desplazamos tmp uno a la derecha.
+        }
+
         cout<<"Valor de mask cuando d >= 3: "<<mask<<endl<<"Valor de st: "<<st<<endl;
     }
     //Paso 7
@@ -274,44 +273,45 @@ void IEEEOperations::add()
     cout<<"Valor de p: "<<p<<endl;
 
     //¿Se ha producido desbordamiento? (un acarreo al final)
-    if (p>=16777216) { //Si p >= 2^24, es que ocupa 25 bits y el primero es un uno, esdecir, hubo desbordamiento y acarreo
-        //Hubo un acarreo al final de la suma ya que este AND ya que no devuelve 0
-        p = p & 0b111111111111111111111111; //Me cargo ese uno que se añadió al producirse desbordamiento
-        c = true; //c=1
-        mask = 0b100000000000000000000000;
+    if (p>0xFFFFFF) { //Si p >= 2^24, es que ocupa 25 bits y el primero es un uno, esdecir, hubo desbordamiento y acarreo
+        p = p & 0xFFFFFF; //Me cargo ese uno que se añadió al producirse desbordamiento
+        c = 1; //c=1
 
         cout<<"Hubo acarreo al final de la suma. Valor de p: "<<p<<" Valor de c: "<<c<<"Valor de mask: "<<mask<<endl;
     } else {
-        c = false; //c = 0
-        mask = 0b011111111111111111111111;
+        c = 0; //c = 0
     }
 
     //Paso 9
     cout<<"Paso 9: "<<endl;
-    if (a.bitfield.sign != b.bitfield.sign && ((p>>23 & 1u) == 1) && (c==false)) {
+    if (a.bitfield.sign != b.bitfield.sign && ((p & 0x800000) == 0x800000) && (c==0)) {
         p = complementoDos(p);
         complementado_P = true;
     }
 
     //Paso 10
     cout<<"Paso 10: "<<endl;
-    if (a.bitfield.sign == b.bitfield.sign && c) {
+    if (a.bitfield.sign == b.bitfield.sign && c==1) {
         st = g|r|st;
-        r = p & 1u;
+        r = p & 0x1;
         p = p >> 1;
-        if (c) {
-            p = p|mask;
-        } else {
-            p = p&mask;
+        if (c==1) {
+            p = p | 0x800000; //Poner el uno de c
         }
         //Ajusto el exponente de la suma:
         result.bitfield.expo += 1;
     } else {
-        //Calculo cuantos bits tengo que desplazar P para que sea una mantisa normalizada.
-        // Para responder a eso, me basta con saber donde está el primer uno empezando por la izquierda.
+        //Calculo cuántos bits tengo que desplazar P para que sea una mantisa normalizadop1.
+        // Para responder a eso, me basta con saber donde está el primer uno empezando por la izquierdop1.
         // Eso se puede hacer con log2:
-        int k = 23;
-        k -= std::log2(p);
+        bool encontrado = false;
+        int k = -1;
+        unsigned int tmp = 0x800000;
+        while (!encontrado && k <24) {
+            encontrado = p & tmp;
+            tmp = tmp >> 1;
+            k ++;
+        }
 
         if (k == 0){
             st = r|st;
@@ -322,8 +322,8 @@ void IEEEOperations::add()
         }
 
         //Desplazar (P,g) a la izquierda k bits:
-        if (k != 0) { //Si k es 0, no hya nada que desplazar, no?? TODO
-            p = p <<1; //Desplazo P a la izquierda dejando un 0 al final
+        if (k != 0) { //Si k es 0, no hya nada que desplazar
+            p = p << 1; //Desplazo P a la izquierda dejando un 0 al final
             p = p | g; //Con el 0 hago un or para poner el valor de g
             //Ya se ha desplazado p,g una unidad. Se hacen los desplazamientos restantes:
             p = p << (k-1);
@@ -333,15 +333,22 @@ void IEEEOperations::add()
 
     //Paso 11
     cout<<"Paso 11: "<<endl;
-    unsigned int p0 = p & 1;
+    unsigned int p0 = p & 0x1;
     if ((r==1 && st==1) || (r==1 && st==0 && p0 == 1)) {
         p+=1;
-        if (c) { //Si hay acarreo, c=1
+        if (p - 0x1000000 >= 0){
+            c = 1;
+            p = p & 0xFFFFFF;
+        } else {
+            c=0;
+        }
+        if (c==1) { //Si hay acarreo, c=1
             p = p >> 1; //Desplazo 1 bit a la derecha p
-            p = p | 0b100000000000000000000000; //Añado el uno del carry al principio
+            p = p | 0x800000; //Añado el uno del carry al principio
             result.bitfield.expo += 1; //Ajustamos el exponente
         }
     }
+    result.bitfield.partFrac = p & 0x7FFFFF;
     //result.mantisa=p; //Falla
 
     //Paso 12
@@ -354,12 +361,6 @@ void IEEEOperations::add()
 
     //Paso 13
     cout<<"Paso 13: "<<endl;
-    //Normalizo la mantisa
-    int normalizador = 23 - log2(p) + 1;
-    p= p<<normalizador;
-    result.bitfield.expo -= normalizador;
-    result.bitfield.partFrac = (p & 0x7FFFFF);
-
 
     //Test
     cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Fraccionaria A: "<<a.bitfield.partFrac<<endl;
@@ -367,7 +368,6 @@ void IEEEOperations::add()
     cout<<" Signo Result: "<<result.bitfield.sign<<" Exponente Result: "<<result.bitfield.expo<<" Fraccionaria Result: "<<result.bitfield.partFrac<<endl;
 
 }
-
 
 unsigned int IEEEOperations::multiplyWithoutSign()
 {
