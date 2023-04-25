@@ -90,7 +90,6 @@ string IEEEOperations::translateHex(union Code op)
     return hexString;
 }
 
-//Metodo para calcular el complemento a 2 (Tengo serias dudas de que funcione bien)
 unsigned int IEEEOperations::complementoDos(unsigned int n) {
     //Según ChatGPT, podemos negar un número con (~variable), luego el complemento a 2 es
     unsigned int tmp = ~n +1; //Hago el complemento a 2
@@ -212,9 +211,6 @@ void IEEEOperations::add()
         cout << "Los signos no coinciden. Mantisa B: " << mantisaB << endl;
     }
 
-    unsigned int p = mantisaB; // TODO funciona sin decirle que son 24 bits?
-    cout << "Valor de p: " << p << endl;
-
     unsigned int p = mantisaB;
     cout<<"Valor de p: "<<p<<endl;
 
@@ -335,7 +331,7 @@ void IEEEOperations::add()
     unsigned int p0 = p & 0x1;
     if ((r==1 && st==1) || (r==1 && st==0 && p0 == 1)) {
         p+=1;
-        if (p - 0x1000000 >= 0){
+        if (p > 0xFFFFFF){
             c = 1;
             p = p & 0xFFFFFF;
         } else {
@@ -371,7 +367,7 @@ void IEEEOperations::add()
 
 }
 
-unsigned int IEEEOperations::multiplyWithoutSign()
+unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
 {
 
     // Paso 1
