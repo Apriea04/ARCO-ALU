@@ -451,49 +451,6 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
 
     // Paso 3: Devolver
     return P.to_ullong();
-
-    /**
-    bool c = false;      // Acarreo
-    unsigned int p= 0;
-    int n = 24;
-
-    for (int i = 0; i < n; i++)
-    {
-        // Parte 1
-        if(mantisaA%2==1)
-        {
-            p = p + mantisaB;
-            //¿Se ha producido desbordamiento? (un acarreo al final)
-            if (p>=16777216) { //Si p >= 2^24, es que ocupa 25 bits y el primero es un uno, es decir, hubo desbordamiento y acarreo
-                //Hubo un acarreo al final de la suma ya que este AND ya que no devuelve 0
-                p = p & 0xFFFFFF; //Me cargo ese uno que se añadió al producirse desbordamiento
-                c = true; //c=1
-
-            } else {
-                c = false; //c = 0
-            }
-        } //Else: p+=0
-
-        // Parte 2
-        mantisaA = mantisaA >> 1;
-
-        if(p%2==1)
-        {
-            mantisaA = mantisaA | 0x800000; //Ponemos en a el uno a la izquierda de P0
-        }
-
-        p = p >> 1;
-
-        if(c==true)
-        {
-            p = p | 0x800000; //Ponemos a la izquierda de p el 1 de c
-        }
-
-        c = false; //Al desplazar, en c entra un 0
-    }
-    //Return para quitar el warning
-    return 0;
-    */
 }
 
 bool IEEEOperations::checkOverflow(int exponent)
@@ -733,7 +690,7 @@ void IEEEOperations::multiply()
 
             else
             {
-
+                // TODO Controlar casos denormales
             }
         }
 
