@@ -40,8 +40,8 @@ private:
     unsigned int complementoDos(unsigned int n);
     unsigned int complementoUno(unsigned int n);
     unsigned int multiplyWithoutSign(bitset<24> *MA, bitset<24> MB);
-    bool checkOverflow();
-    bool checkUnderflow();
+    bool checkOverflow(int exponent);
+    bool checkUnderflow(int exponent);
     bool operandosOpuestos();
     bool esOp1Denormal();
     bool esOp2Denormal();
