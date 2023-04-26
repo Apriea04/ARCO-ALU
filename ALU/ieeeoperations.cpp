@@ -166,6 +166,8 @@ void IEEEOperations::add()
         return;
     }
 
+    int exponente;
+
     // Paso 1
     cout << "Paso 1: " << endl;
 
@@ -197,10 +199,10 @@ void IEEEOperations::add()
     // Paso 3
     cout << "Paso 3: " << endl;
 
-    result.bitfield.expo = a.bitfield.expo;
+    exponente = a.bitfield.expo;
     int d = a.bitfield.expo - b.bitfield.expo;
 
-    cout << "Exponente suma: " << result.bitfield.expo << " d: " << d << endl;
+    cout << "Exponente suma: " << exponente << " d: " << d << endl;
 
     // Paso 4
     cout << "Paso 4: " << endl;
@@ -291,7 +293,7 @@ void IEEEOperations::add()
             p = p & mask;
         }
         // Ajusto el exponente de la suma:
-        result.bitfield.expo += 1;
+        exponente += 1;
     } else {
         //Calculo cuántos bits tengo que desplazar P para que sea una mantisa normalizadop1.
         // Para responder a eso, me basta con saber donde está el primer uno empezando por la izquierdop1.
@@ -323,7 +325,7 @@ void IEEEOperations::add()
             //Ya se ha desplazado p,g una unidad. Se hacen los desplazamientos restantes:
             p = p << (k-1);
         }
-        result.bitfield.expo -= k;
+        exponente -= k;
     }
 
     //Paso 11
@@ -340,7 +342,7 @@ void IEEEOperations::add()
         if (c==1) { //Si hay acarreo, c=1
             p = p >> 1; //Desplazo 1 bit a la derecha p
             p = p | 0x800000; //Añado el uno del carry al principio
-            result.bitfield.expo += 1; //Ajustamos el exponente
+            exponente += 1; //Ajustamos el exponente
         }
     }
     result.bitfield.partFrac = p & 0x7FFFFF;
@@ -356,6 +358,14 @@ void IEEEOperations::add()
     {
         result.bitfield.sign = a.bitfield.sign;
     }
+
+    //Añadido por consejo de David:
+    //tratamiento del exponente tanto en los operandos denormales como en el resultado final.
+
+    if (exponente<=0) {
+        exponente = 1;
+    }
+    result.bitfield.expo = static_cast<unsigned int>(exponente) & 0xFF;
 
     //Paso 13
     cout<<"Paso 13: "<<endl;
