@@ -386,8 +386,8 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
     int n = 24;
     bool c = false; // Acarreo
 
-    cout << MA->to_string() << endl;
-    cout << MB.to_string() << endl;
+    //cout << MA->to_string() << endl;
+    //cout << MB.to_string() << endl;
 
     unsigned int val = 0;
 
@@ -410,14 +410,14 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
             // Hubo un acarreo al final de la suma ya que este AND ya que no devuelve 0
             P = P.to_ullong() & 0b111111111111111111111111; // Me cargo ese uno que se añadió al producirse desbordamiento
             c = true;                                       // c=1
-            cout << "Hubo acarreo al final de la suma. Valor de p: " << P.to_string() << " Valor de c: " << c << endl;
+            //cout << "Hubo acarreo al final de la suma. Valor de p: " << P.to_string() << " Valor de c: " << c << endl;
         }
         else
         {
             c = false;
         }
 
-        cout << "p: "<< P.to_string() << " a: " << MA->to_string() << endl;
+        //cout << "p: "<< P.to_string() << " a: " << MA->to_string() << endl;
 
         // Paso 1.2
         // Desplazar 1 bit a la derecha (c,P,A)
@@ -443,7 +443,7 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
         {
             P.reset(n - 1);
         }
-        cout << "P: " << P.to_string() << " A: " << MA->to_string() << endl;
+        //cout << "P: " << P.to_string() << " A: " << MA->to_string() << endl;
     }
 
     // Paso 3: Devolver
@@ -1093,83 +1093,117 @@ void IEEEOperations::divide()
     mA.set(n - 1);
     mB.set(n - 1);
 
-    // Paso 1
-    // Escalar A y B
-    float numA = 0;
-    float numB = 0;
-
-    for (int i = 0; i < n; i++)
+    if(b.numero == 0)
     {
-        if(mA.test(n-i-1))
+        result.bitfield.sign = 0;
+        result.bitfield.expo = 255;
+        result.bitfield.partFrac = 1;
+    }
+    else
+    {
+
+
+
+        // Paso 1
+        // Escalar A y B
+        float numA = 0;
+        float numB = 0;
+
+        for (int i = 0; i < n; i++)
         {
-            numA += pow(2, -i);
+            if(mA.test(n-i-1))
+            {
+                numA += pow(2, -i);
+            }
+
+            if(mB.test(n-i-1))
+            {
+                numB +=pow(2, -i);
+            }
         }
 
-        if(mB.test(n-i-1))
+        cout << "A: " << mA.to_string() << " Escalado: " << numA << endl;
+        cout << "B: " << mB.to_string() << " Escalado: " << numB << endl;
+
+        // Paso 2
+        // Buscar una solución aproximada
+
+        float b_prime = 0;
+
+        if(numB >= 1 && numB < 1.25)
         {
-            numB +=pow(2, -i);
+            b_prime = 1.00;
         }
+
+        if(numB >= 1.25 && numB < 2.00)
+        {
+            b_prime = 0.80;
+        }
+
+        // Paso 3
+        // Asignar x0 e y0
+
+        float x0 = multiplyVals(numA, b_prime);
+        float y0 = multiplyVals(numB, b_prime);
+
+        cout << "A: " << numA << " B: " << numB << " B': " << b_prime << endl;
+        cout << "Valor x0: " << x0 << endl;
+        cout << "Valor y0: " << y0 << endl;
+
+
+        // Paso 4
+        // Iterar para obtener una aproximación
+        float r = 0, x = x0, y = y0, x_old = 0;
+
+        float threshold = pow(10, -4);
+        cout << "T: " << threshold << endl;
+        float difference = 100;
+
+        while(difference>=threshold)
+        {
+            r = 2 - y;
+            y = multiplyVals(y, r);
+            x_old = x;
+            x = multiplyVals(x, r);
+
+            cout << "R:  " << r << endl;
+            cout << "Y1: " << y << endl;
+            cout << "X1: " << x << endl;
+            cout << "X0: " << x_old << endl;
+            difference = abs(x - x_old);
+            cout << "DIF: " << difference << endl;
+        }
+
+        union Code last_x;
+        last_x.numero = x;
+
+        //cout << "X: " << x << endl;
+        //cout << "X: " << last_x.bitfield.partFrac << endl;
+
+
+
+        // Paso 5
+        // Signo de la división
+        result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
+
+        // Paso 6
+        // Exponente de la división
+        int exponent = a.bitfield.expo - b.bitfield.expo + last_x.bitfield.expo;
+        if(exponent > 254)
+        {
+            result.bitfield.expo = 255;
+            result.bitfield.partFrac = 0;
+        }
+        else
+        {
+            result.bitfield.expo = exponent;
+
+            // Paso 7
+            // Parte fraccionaria de la división
+            result.bitfield.partFrac = last_x.bitfield.partFrac;
+        }
+
     }
-
-    cout << "A: " << mA.to_string() << " Escalado: " << numA << endl;
-    cout << "B: " << mB.to_string() << " Escalado: " << numB << endl;
-
-    // Paso 2
-    // Buscar una solución aproximada
-
-    float b_prime = 0;
-
-    if(numB >= 1 && numB < 1.25)
-    {
-        b_prime = 1.00;
-    }
-
-    if(numB >= 1.25 && numB < 2.00)
-    {
-        b_prime = 0.80;
-    }
-
-    // Paso 3
-    // Asignar x0 e y0
-
-    float x0 = multiplyVals(numA, b_prime);
-    float y0 = multiplyVals(numB, b_prime);
-
-    cout << "A: " << numA << " B: " << numB << " B': " << b_prime << endl;
-    cout << "Valor x0: " << x0 << endl;
-    cout << "Valor y0: " << y0 << endl;
-
-
-    // Paso 4
-    // Iterar para obtener una aproximación
-    float r = 0, x = x0, y = y0, x_old = 0;
-
-    while(!(x-x_old<pow(10, -4)))
-    {
-        r = 2 - y;
-        y = multiplyVals(y, r);
-        x_old = x;
-        x = multiplyVals(x_old, r);
-
-    }
-
-    union Code last_x;
-    last_x.numero = x;
-
-
-
-    // Paso 5
-    // Signo de la división
-    result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
-
-    // Paso 6
-    // Exponente de la división
-    int exponent = a.bitfield.expo - b.bitfield.expo + last_x.bitfield.expo;
-    result.bitfield.expo = exponent;
-
-    // Paso 7
-    // Parte fraccionaria de la división
-    result.bitfield.partFrac = last_x.bitfield.partFrac;
 
 
 }
