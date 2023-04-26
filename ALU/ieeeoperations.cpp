@@ -387,18 +387,25 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
     bool c = false; // Acarreo
 
     cout << MA->to_string() << endl;
-    cout << MA->test(0) << endl;
+    cout << MB.to_string() << endl;
+
+    unsigned int val = 0;
 
     for (int i = 0; i < n; i++)
     {
         // Paso 1.1
         if (MA->test(0))
         {
-            P = bitset<24>{P.to_ullong() + MB.to_ullong()};
+            val = P.to_ullong() + MB.to_ullong();
+            P = bitset<24>{val};
+        }
+        else
+        {
+            val = 0;
         }
 
         // ¿Se ha producido desbordamiento? (un acarreo al final)
-        if (P.to_ullong() >= 0xFFFFFF)
+        if (val >= 0xFFFFFF)
         { // Si p >= 2^24, es que ocupa 25 bits y el primero es un uno, esdecir, hubo desbordamiento y acarreo
             // Hubo un acarreo al final de la suma ya que este AND ya que no devuelve 0
             P = P.to_ullong() & 0b111111111111111111111111; // Me cargo ese uno que se añadió al producirse desbordamiento
@@ -409,6 +416,8 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
         {
             c = false;
         }
+
+        cout << "p: "<< P.to_string() << " a: " << MA->to_string() << endl;
 
         // Paso 1.2
         // Desplazar 1 bit a la derecha (c,P,A)
@@ -692,6 +701,242 @@ void IEEEOperations::multiply()
     }
 }
 
+float IEEEOperations::multiplyVals(float a, float b)
+{
+
+
+    union Code ca, cb, res;
+    ca.numero = a;
+    cb.numero = b;
+    res.numero = 0;
+    int n = 24;
+
+    bitset<24> mA{ca.bitfield.partFrac};
+    bitset<24> mB{cb.bitfield.partFrac};
+
+    mA.set(n - 1);
+    mB.set(n - 1);
+
+    // Paso 1
+    // Signo del producto
+    res.bitfield.sign = ca.bitfield.sign ^ cb.bitfield.sign;
+
+    // Paso 2
+    // Exponente del producto
+    int exponent = (ca.bitfield.expo - 127) + (cb.bitfield.expo - 127);
+
+    // Paso 3
+    // 3.1 Mantisa del producto
+    bitset<24> P{multiplyWithoutSign(&mA, mB)};
+
+    // 3.2 Desplazar (P,A) 1 bit a la izquierda o sumar 1 al exponente
+    if (!P.test(n - 1))
+    {
+        P = bitset<24>{P << 1};
+        if (mA.test(n - 1))
+        {
+            P.set(0);
+        }
+        else
+        {
+            P.reset(0);
+        }
+
+        mA = bitset<24>{mA << 1};
+    }
+    else
+    {
+        exponent++;
+    }
+
+    // 3.3 Bit redondeo
+    bool r = mA.test(n - 1);
+
+    // 3.4 Bit sticky
+    bool st = false;
+
+    for (int i = 0; i < n; i++)
+    {
+        if (mA.test(i))
+        {
+            st = true;
+            break;
+        }
+    }
+
+    // 3.5 Redondeo
+    if ((r == true && st == true) || (r == true && st == false && P.test(0)))
+    {
+        P = bitset<24>{P.to_ullong() + 1};
+        cout << "P: " << P.to_string() << " A: " << mA.to_string() << endl;
+    }
+
+    exponent += 127;
+
+    // Comprobación desbordamientos
+    if (checkOverflow(exponent))
+    {
+        res.bitfield.partFrac = 0;
+        res.bitfield.expo = 255;
+    }
+
+    else if (checkUnderflow(exponent))
+    {
+
+        int t = 1 - exponent;
+
+        if (t >= n)
+        {
+            res.bitfield.partFrac = 1;
+            res.bitfield.expo = 255;
+        }
+        else
+        {
+            // 1. Desplazar aritméticamente (P,A) t bits a la derecha
+            for (int i = 0; i < t; i++)
+            {
+                mA = bitset<24>{mA >> 1};
+
+                if (P.test(0))
+                {
+                    mA.set(n - 1);
+                }
+                else
+                {
+                    mA.reset(n - 1);
+                }
+
+                if (P.test(n - 1))
+                {
+                    P = bitset<24>{P >> 1};
+                    P.set(n - 1);
+                }
+                else
+                {
+                    P = bitset<24>{P >> 1};
+                    P.reset(n - 1);
+                }
+            }
+
+            // 2. Exponente producto = Exponente mínimo
+
+            res.bitfield.expo = 1;
+        }
+    }
+    else
+    {
+        // Tratamiento específico con operandos denormales
+        if (esOp1Denormal() || esOp2Denormal())
+        {
+
+            // Caso 1: Exponente producto < Exponente mínimo
+
+            if (exponent < 1)
+            {
+                int t = 1 - exponent;
+
+                if (t >= n)
+                {
+                    res.bitfield.partFrac = 1;
+                    res.bitfield.expo = 255;
+                }
+                else
+                {
+                    // 1. Desplazar aritméticamente (P,A) t bits a la derecha
+                    for (int i = 0; i < t; i++)
+                    {
+                        mA = bitset<24>{mA >> 1};
+
+                        if (P.test(0))
+                        {
+                            mA.set(n - 1);
+                        }
+                        else
+                        {
+                            mA.reset(n - 1);
+                        }
+
+                        if (P.test(n - 1))
+                        {
+                            P = bitset<24>{P >> 1};
+                            P.set(n - 1);
+                        }
+                        else
+                        {
+                            P = bitset<24>{P >> 1};
+                            P.reset(n - 1);
+                        }
+                    }
+
+                    // 2. Exponente producto = Exponente mínimo
+
+                    res.bitfield.expo = 1;
+                }
+            }
+
+            // Caso 2: Exponente producto > Exponente mínimo
+
+            else if (exponent > 1)
+            {
+                int t1 = exponent - 1;
+                int t2 = 0;
+
+                while (mA.test(n - t2 - 1) == false)
+                {
+                    t2++;
+                }
+
+                int t = min(t1, t2);
+
+                res.bitfield.expo = exponent - t;
+
+                // Desplazar aritméticamente (P,A) t bits a la izquierda
+                for (int i = 0; i < t; i++)
+                {
+                    P = bitset<24>{P << 1};
+
+                    if (mA.test(n - 1))
+                    {
+                        P.set(0);
+                    }
+                    else
+                    {
+                        P.reset(0);
+                    }
+
+                    if (mA.test(0))
+                    {
+                        mA = bitset<24>{mA << 1};
+                        mA.set(0);
+                    }
+                    else
+                    {
+                        mA = bitset<24>{mA << 1};
+                        P.reset(0);
+                    }
+                }
+            }
+
+            // Caso 3: Exponente producto = Exponente mínimo
+
+            else
+            {
+                // TODO Controlar casos denormales
+            }
+        }
+
+        res.bitfield.expo = exponent;
+        // Mantisa final
+        res.bitfield.partFrac = P.to_ullong();
+
+
+
+    }
+
+    return res.numero;
+}
+
+/*
 void IEEEOperations::multiplyA()
 {
     result.numero = 0;
@@ -823,6 +1068,9 @@ void IEEEOperations::multiplyA()
     }
     result.bitfield.partFrac = (p & 0x7FFFFF);
 }
+*/
+
+
 
 // Metodo de la division
 void IEEEOperations::divide()
@@ -832,6 +1080,96 @@ void IEEEOperations::divide()
     cout << " Signo A: " << signoA << " Exponente A: " << exponenteA << " Mantisa A: " << mantisaA << endl;
     cout << " Signo B: " << signoB << " Exponente B: " << exponenteB << " Mantisa B: " << mantisaB << endl;
 
-    // Numero para tests
-    result.numero = 33;
+    result.numero = 0;
+
+    union Code a, b;
+    a.numero = op1.numero;
+    b.numero = op2.numero;
+    int n = 24;
+
+    bitset<24> mA{a.bitfield.partFrac};
+    bitset<24> mB{b.bitfield.partFrac};
+
+    mA.set(n - 1);
+    mB.set(n - 1);
+
+    // Paso 1
+    // Escalar A y B
+    float numA = 0;
+    float numB = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        if(mA.test(n-i-1))
+        {
+            numA += pow(2, -i);
+        }
+
+        if(mB.test(n-i-1))
+        {
+            numB +=pow(2, -i);
+        }
+    }
+
+    cout << "A: " << mA.to_string() << " Escalado: " << numA << endl;
+    cout << "B: " << mB.to_string() << " Escalado: " << numB << endl;
+
+    // Paso 2
+    // Buscar una solución aproximada
+
+    float b_prime = 0;
+
+    if(numB >= 1 && numB < 1.25)
+    {
+        b_prime = 1.00;
+    }
+
+    if(numB >= 1.25 && numB < 2.00)
+    {
+        b_prime = 0.80;
+    }
+
+    // Paso 3
+    // Asignar x0 e y0
+
+    float x0 = multiplyVals(numA, b_prime);
+    float y0 = multiplyVals(numB, b_prime);
+
+    cout << "A: " << numA << " B: " << numB << " B': " << b_prime << endl;
+    cout << "Valor x0: " << x0 << endl;
+    cout << "Valor y0: " << y0 << endl;
+
+
+    // Paso 4
+    // Iterar para obtener una aproximación
+    float r = 0, x = x0, y = y0, x_old = 0;
+
+    while(!(x-x_old<pow(10, -4)))
+    {
+        r = 2 - y;
+        y = multiplyVals(y, r);
+        x_old = x;
+        x = multiplyVals(x_old, r);
+
+    }
+
+    union Code last_x;
+    last_x.numero = x;
+
+
+
+    // Paso 5
+    // Signo de la división
+    result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
+
+    // Paso 6
+    // Exponente de la división
+    int exponent = a.bitfield.expo - b.bitfield.expo + last_x.bitfield.expo;
+    result.bitfield.expo = exponent;
+
+    // Paso 7
+    // Parte fraccionaria de la división
+    result.bitfield.partFrac = last_x.bitfield.partFrac;
+
+
 }

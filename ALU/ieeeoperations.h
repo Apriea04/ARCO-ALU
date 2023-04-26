@@ -19,7 +19,7 @@ public:
     string translateHex(union Code op);
     void add();
     void multiply();
-    void multiplyA();
+    float multiplyVals(float a, float b);
     void divide();
     union Code getResult();
 
