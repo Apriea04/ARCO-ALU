@@ -91,7 +91,7 @@ string IEEEOperations::translateHex(union Code op)
 }
 
 unsigned int IEEEOperations::complementoDos(unsigned int n) {
-    //Según ChatGPT, podemos negar un número con (~variable), luego el complemento a 2 es
+
     unsigned int tmp = ~n +1; //Hago el complemento a 2
     if (tmp > 0xFFFFFF) {
         tmp &= 0xFFFFFF; //Lo dejo con 24 bits
@@ -110,9 +110,9 @@ unsigned int IEEEOperations::complementoUno(unsigned int n)
 }
 
 // Metodo que comprueba si dos operandos son opuestos
-bool IEEEOperations::operandosOpuestos()
+bool IEEEOperations::operandosOpuestos(float a, float b)
 {
-    return op1.numero == -op2.numero;
+    return a == -b;
 }
 
 // Metodo que comprueba si op1 es denormal
@@ -139,6 +139,8 @@ void IEEEOperations::add()
     a.numero = op1.numero;
     b.numero = op2.numero;
 
+    result.numero = addVals(a.numero, b.numero);
+    /*
     mantisaA = a.bitfield.partFrac | 0x800000;
     mantisaB = b.bitfield.partFrac | 0x800000;
 
@@ -374,7 +376,251 @@ void IEEEOperations::add()
     cout<<" Signo A: "<<a.bitfield.sign<<" Exponente A: "<<a.bitfield.expo<<" Fraccionaria A: "<<a.bitfield.partFrac<<endl;
     cout<<" Signo B: "<<b.bitfield.sign<<" Exponente B: "<<b.bitfield.expo<<" Fraccionaria B: "<<b.bitfield.partFrac<<endl;
     cout<<" Signo Result: "<<result.bitfield.sign<<" Exponente Result: "<<result.bitfield.expo<<" Fraccionaria Result: "<<result.bitfield.partFrac<<endl;
+    */
+}
 
+float IEEEOperations::addVals(float a, float b)
+{
+    union Code ca,cb, res;
+    ca.numero = a;
+    cb.numero = b;
+    result.numero = 0;
+
+    mantisaA = ca.bitfield.partFrac | 0x800000;
+    mantisaB = cb.bitfield.partFrac | 0x800000;
+
+    //Casos raros:
+    //TODO reformatear esto
+    if (operandosOpuestos(a, b)) {
+        if (ca.bitfield.expo == 0xFF && ca.bitfield.partFrac == 0) {
+            res.bitfield.expo = 0xFF;
+            res.bitfield.sign = ca.bitfield.sign;
+            res.bitfield.partFrac = 0x0;
+            //Forzamos un inf
+        } else {
+            res.numero=0;
+        }
+        return res.numero;
+    } if (esOp1Denormal()) {
+        mantisaA &= 0x7FFFFF;
+    }
+    if (esOp2Denormal()) {
+        mantisaB &= 0x7FFFFF;
+    } if (ca.bitfield.expo == 0xFF && ca.bitfield.partFrac == 0) {
+        res.bitfield.expo = 0xFF;
+        res.bitfield.sign = ca.bitfield.sign;
+        res.bitfield.partFrac = 0x0; //Si op1 es inf, el resultado tb
+        return res.numero;
+    }
+
+    int exponente;
+
+    // Paso 1
+    //cout << "Paso 1: " << endl;
+
+    //cout << " Signo A: " << ca.bitfield.sign << " Exponente A: " << ca.bitfield.expo << " Fraccionaria A: " << ca.bitfield.partFrac << endl;
+    //cout << " Signo B: " << cb.bitfield.sign << " Exponente B: " << cb.bitfield.expo << " Fraccionaria B: " << cb.bitfield.partFrac << endl;
+
+    int g = 0;
+    int r = 0;
+    int st = 0;
+    bool c; //Acarreo
+    bool operandos_intercambiados = false;
+    bool complementado_P = false;
+    unsigned int mask;
+
+    // Paso 2
+    //cout << "Paso 2: Si a < b intercambiamos" << endl;
+    if (ca.bitfield.expo < cb.bitfield.expo)
+    {
+        // Intercambiamos los operandos
+        Code tmp = ca;
+        ca = cb;
+        cb = tmp;
+        mask = mantisaA;
+        mantisaA = mantisaB;
+        mantisaB = mask;
+        operandos_intercambiados = true;
+    }
+
+    // Paso 3
+    //cout << "Paso 3: " << endl;
+
+    exponente = ca.bitfield.expo;
+    int d = ca.bitfield.expo - cb.bitfield.expo;
+
+    //cout << "Exponente suma: " << exponente << " d: " << d << endl;
+
+    // Paso 4
+    //cout << "Paso 4: " << endl;
+
+    if (ca.bitfield.sign != cb.bitfield.sign)
+    {
+        mantisaB = complementoDos(mantisaB);
+        //cout << "Los signos no coinciden. Mantisa B: " << mantisaB << endl;
+    }
+
+    unsigned int p = mantisaB;
+    //cout<<"Valor de p: "<<p<<endl;
+
+    //Paso 6
+    //cout<<"Paso 6: "<<endl;
+    if (d>=1) {
+        g = (p >> (d-1)) & 1;
+        //cout<<"Valor de g cuando d >= 1: "<<g<<endl;
+    }
+    if (d >= 2)
+    {
+        r = (p >> (d - 2)) & 1;
+        //cout << "Valor de r cuando d >= 2: " << r << endl;
+    }
+
+    if (d >= 3)
+    {
+
+        unsigned int tmp = p;
+
+        for (int i = 0; i<d-3; i++) {
+            st |= (tmp & 0b1); //Hacemos un or con el último bit de tmp
+            tmp = tmp >> 1; //Desplazamos tmp uno a la derecha.
+        }
+
+        //cout<<"Valor de mask cuando d >= 3: "<<mask<<endl<<"Valor de st: "<<st<<endl;
+    }
+    // Paso 7
+    //cout << "Paso 7: " << endl;
+    if (cb.bitfield.sign != ca.bitfield.sign)
+    {
+        p = complementoUno(p);
+        p = p >> d;
+        p = complementoUno(p);
+        //cout << "Valor de mask cuando signos de a y b no coinciden: " << mask << endl
+        //     << "Valor de p: " << p << endl;
+    }
+    else
+    {
+        p = p >> d;
+        //cout << "Si los valores coiniden: valor de p " << p << endl;
+    }
+
+    // Paso 8
+    //cout << "Paso 8: " << endl;
+    p = p + mantisaA;
+
+    //cout << "Valor de p: " << p << endl;
+
+    //¿Se ha producido desbordamiento? (un acarreo al final)
+    if (p>0xFFFFFF) { //Si p >= 2^24, es que ocupa 25 bits y el primero es un uno, esdecir, hubo desbordamiento y acarreo
+        p = p & 0xFFFFFF; //Me cargo ese uno que se añadió al producirse desbordamiento
+        c = 1; //c=1
+
+        //cout<<"Hubo acarreo al final de la suma. Valor de p: "<<p<<" Valor de c: "<<c<<"Valor de mask: "<<mask<<endl;
+    } else {
+        c = 0; //c = 0
+    }
+
+    //Paso 9
+    //cout<<"Paso 9: "<<endl;
+    if (ca.bitfield.sign != cb.bitfield.sign && ((p & 0x800000) == 0x800000) && (c==0)) {
+        p = complementoDos(p);
+        complementado_P = true;
+    }
+
+    //Paso 10
+    //cout<<"Paso 10: "<<endl;
+    if (ca.bitfield.sign == cb.bitfield.sign && c==1) {
+        st = g|r|st;
+        r = p & 0x1;
+        p = p >> 1;
+        if (c==1) {
+            p = p | 0x800000; //Poner el uno de c
+        }
+        else
+        {
+            p = p & mask;
+        }
+        // Ajusto el exponente de la suma:
+        exponente += 1;
+    } else {
+        //Calculo cuántos bits tengo que desplazar P para que sea una mantisa normalizadop1.
+        // Para responder a eso, me basta con saber donde está el primer uno empezando por la izquierdop1.
+        // Eso se puede hacer con log2:
+        bool encontrado = false;
+        int k = -1;
+        unsigned int tmp = 0x800000;
+        while (!encontrado && k <24) {
+            encontrado = p & tmp;
+            tmp = tmp >> 1;
+            k ++;
+        }
+
+        if (k == 0)
+        {
+            st = r | st;
+            r = g;
+        }
+        else if (k > 1)
+        {
+            r = 0;
+            st = 0;
+        }
+
+        //Desplazar (P,g) a la izquierda k bits:
+        if (k != 0) { //Si k es 0, no hya nada que desplazar
+            p = p << 1; //Desplazo P a la izquierda dejando un 0 al final
+            p = p | g; //Con el 0 hago un or para poner el valor de g
+            //Ya se ha desplazado p,g una unidad. Se hacen los desplazamientos restantes:
+            p = p << (k-1);
+        }
+        exponente -= k;
+    }
+
+    //Paso 11
+    //cout<<"Paso 11: "<<endl;
+    unsigned int p0 = p & 0x1;
+    if ((r==1 && st==1) || (r==1 && st==0 && p0 == 1)) {
+        p+=1;
+        if (p > 0xFFFFFF){
+            c = 1;
+            p = p & 0xFFFFFF;
+        } else {
+            c=0;
+        }
+        if (c==1) { //Si hay acarreo, c=1
+            p = p >> 1; //Desplazo 1 bit a la derecha p
+            p = p | 0x800000; //Añado el uno del carry al principio
+            exponente += 1; //Ajustamos el exponente
+        }
+    }
+    res.bitfield.partFrac = p & 0x7FFFFF;
+
+    // Paso 12
+    //cout << "Paso 12: " << endl;
+    if ((operandos_intercambiados == false) && (complementado_P == true))
+    {
+        res.bitfield.sign = cb.bitfield.sign;
+    }
+    else
+    {
+        res.bitfield.sign = ca.bitfield.sign;
+    }
+
+    //Añadido por consejo de David:
+    //tratamiento del exponente tanto en los operandos denormales como en el resultado final.
+
+    if (exponente<=0) {
+        exponente = 1;
+    }
+    res.bitfield.expo = static_cast<unsigned int>(exponente) & 0xFF;
+
+    //Paso 13
+    //cout<<"Paso 13: "<<endl;
+
+    //Test
+    //cout<<" Signo A: "<<ca.bitfield.sign<<" Exponente A: "<<ca.bitfield.expo<<" Fraccionaria A: "<<ca.bitfield.partFrac<<endl;
+    //cout<<" Signo B: "<<cb.bitfield.sign<<" Exponente B: "<<cb.bitfield.expo<<" Fraccionaria B: "<<cb.bitfield.partFrac<<endl;
+    //cout<<" Signo Result: "<<res.bitfield.sign<<" Exponente Result: "<<res.bitfield.expo<<" Fraccionaria Result: "<<res.bitfield.partFrac<<endl;
+    return res.numero;
 }
 
 unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
@@ -389,14 +635,18 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
     //cout << MA->to_string() << endl;
     //cout << MB.to_string() << endl;
 
-    unsigned int val = 0;
+    unsigned long long val = 0;
 
     for (int i = 0; i < n; i++)
     {
         // Paso 1.1
         if (MA->test(0))
         {
-            val = P.to_ullong() + MB.to_ullong();
+
+            //val = P.to_ullong() + MB.to_ullong();
+            val = addVals(P.to_ullong(), MB.to_ullong());
+            //cout << "V: " << val << " P: " << P.to_ullong() << " M: " << MB.to_ullong() << endl;
+
             P = bitset<24>{val};
         }
         else
@@ -472,6 +722,8 @@ void IEEEOperations::multiply()
     b.numero = op2.numero;
     int n = 24;
 
+    result.numero = multiplyVals(a.numero, b.numero);
+    /*
     bitset<24> mA{a.bitfield.partFrac};
     bitset<24> mB{b.bitfield.partFrac};
 
@@ -505,9 +757,7 @@ void IEEEOperations::multiply()
         return;
     }
 
-    // Paso 1
-    // Signo del producto
-    result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
+
 
     // Paso 2
     // Exponente del producto
@@ -560,11 +810,15 @@ void IEEEOperations::multiply()
     // 3.5 Redondeo
     if ((r == true && st == true) || (r == true && st == false && P.test(0)))
     {
-        P = bitset<24>{P.to_ullong() + 1};
+        P = bitset<24>{addVals(P.to_ullong(), 1)};
         cout << "P: " << P.to_string() << " A: " << mA.to_string() << endl;
     }
 
     exponent += 127;
+
+    // Paso 1
+    // Signo del producto
+    result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
 
     // Comprobación desbordamientos
     if (checkOverflow(exponent))
@@ -726,8 +980,15 @@ void IEEEOperations::multiply()
         cout << "P: " << P.to_ullong() << endl;
         result.bitfield.partFrac = P.to_ullong();
     }
+*/
 }
 
+/**
+ * @brief Inmersion method to multiply 2 values
+ * @param a (float)
+ * @param b (float)
+ * @return P, product a*b (float)
+ */
 
 float IEEEOperations::multiplyVals(float a, float b)
 {
@@ -745,9 +1006,7 @@ float IEEEOperations::multiplyVals(float a, float b)
     mA.set(n - 1);
     mB.set(n - 1);
 
-    // Paso 1
-    // Signo del producto
-    res.bitfield.sign = ca.bitfield.sign ^ cb.bitfield.sign;
+
 
     // Paso 2
     // Exponente del producto
@@ -795,11 +1054,16 @@ float IEEEOperations::multiplyVals(float a, float b)
     // 3.5 Redondeo
     if ((r == true && st == true) || (r == true && st == false && P.test(0)))
     {
-        P = bitset<24>{P.to_ullong() + 1};
-        cout << "P: " << P.to_string() << " A: " << mA.to_string() << endl;
+        unsigned long long value = addVals(P.to_ullong(), 1);
+        P = bitset<24>{value};
+        //cout << "P: " << P.to_string() << " A: " << mA.to_string() << endl;
     }
 
     exponent += 127;
+
+    // Paso 1
+    // Signo del producto
+    res.bitfield.sign = ca.bitfield.sign ^ cb.bitfield.sign;
 
     // Comprobación desbordamientos
     if (checkOverflow(exponent))
@@ -861,7 +1125,7 @@ float IEEEOperations::multiplyVals(float a, float b)
 
             if (exponent < 1)
             {
-                int t = 1 - exponent;
+                int t = addVals(1, -exponent);
 
                 if (t >= n)
                 {
@@ -906,7 +1170,7 @@ float IEEEOperations::multiplyVals(float a, float b)
 
             else if (exponent > 1)
             {
-                int t1 = exponent - 1;
+                int t1 = addVals(exponent, -1);
                 int t2 = 0;
 
                 while (mA.test(n - t2 - 1) == false)
@@ -916,7 +1180,7 @@ float IEEEOperations::multiplyVals(float a, float b)
 
                 int t = min(t1, t2);
 
-                res.bitfield.expo = exponent - t;
+                res.bitfield.expo = addVals(exponent, - t);
 
                 // Desplazar aritméticamente (P,A) t bits a la izquierda
                 for (int i = 0; i < t; i++)
@@ -956,8 +1220,6 @@ float IEEEOperations::multiplyVals(float a, float b)
         res.bitfield.expo = exponent;
         // Mantisa final
         res.bitfield.partFrac = P.to_ullong();
-
-
 
     }
 
@@ -1005,12 +1267,14 @@ void IEEEOperations::divide()
         {
             if(mA.test(n-i-1))
             {
-                numA += pow(2, -i);
+                //numA += pow(2, -i);
+                numA = addVals(numA, pow(2, -i));
             }
 
             if(mB.test(n-i-1))
             {
-                numB +=pow(2, -i);
+                //numB +=pow(2, -i);
+                numB = addVals(numB, pow(2, -i));
             }
         }
 
@@ -1062,7 +1326,7 @@ void IEEEOperations::divide()
             cout << "Y1: " << y << endl;
             cout << "X1: " << x << endl;
             cout << "X0: " << x_old << endl;
-            difference = abs(x - x_old);
+            difference = abs(addVals(x ,-x_old));
             cout << "DIF: " << difference << endl;
         }
 
@@ -1072,15 +1336,15 @@ void IEEEOperations::divide()
         //cout << "X: " << x << endl;
         //cout << "X: " << last_x.bitfield.partFrac << endl;
 
-
+        // Paso 6
+        // Exponente de la división
+        // TODO Usar método addVals (no funciona bien aquí, pero solo ocurre aquí)
+        int exponent = a.bitfield.expo - b.bitfield.expo + last_x.bitfield.expo;
 
         // Paso 5
         // Signo de la división
         result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
 
-        // Paso 6
-        // Exponente de la división
-        int exponent = a.bitfield.expo - b.bitfield.expo + last_x.bitfield.expo;
         if(exponent > 254)
         {
             result.bitfield.expo = 255;

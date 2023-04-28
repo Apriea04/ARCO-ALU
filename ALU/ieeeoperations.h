@@ -18,6 +18,7 @@ public:
     string translateIEEE(union Code op);
     string translateHex(union Code op);
     void add();
+    float addVals(float a, float b);
     void multiply();
     float multiplyVals(float a, float b);
     void divide();
@@ -42,7 +43,7 @@ private:
     unsigned int multiplyWithoutSign(bitset<24> *MA, bitset<24> MB);
     bool checkOverflow(int exponent);
     bool checkUnderflow(int exponent);
-    bool operandosOpuestos();
+    bool operandosOpuestos(float a, float b);
     bool esOp1Denormal();
     bool esOp2Denormal();
 
