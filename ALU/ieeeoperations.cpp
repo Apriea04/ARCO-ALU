@@ -478,6 +478,33 @@ void IEEEOperations::multiply()
     mA.set(n - 1);
     mB.set(n - 1);
 
+    //Casos especiales: infinitos y ceros
+    if (a.numerox == 0x7F800000 || a.numerox == 0xFF800000) {
+        //a es inf o -inf
+        if (b.numerox == 0x0) {
+            //inf * 0
+            result.numerox = 0x7f800001;
+        } else {
+            result.bitfield.expo = 0xFF;
+            result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
+            result.bitfield.partFrac = 0x0;
+        }
+        return;
+    } else if (b.numerox == 0x7F800000 || b.numerox == 0xFF800000) {
+        //b es inf o -inf y a no es ni inf ni -inf
+        if (a.numerox == 0x0){
+            result.numerox = 0x7F800001; //nan
+        } else {
+            result.bitfield.expo = 0xFF;
+            result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
+            result.bitfield.partFrac = 0x0;
+        }
+        return;
+    } else if (a.numerox == 0x0 || b.numerox ==0x0) {
+        //0 * x (ni a ni b son infinitos)
+        return;
+    }
+
     // Paso 1
     // Signo del producto
     result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
@@ -700,6 +727,7 @@ void IEEEOperations::multiply()
         result.bitfield.partFrac = P.to_ullong();
     }
 }
+
 
 float IEEEOperations::multiplyVals(float a, float b)
 {
