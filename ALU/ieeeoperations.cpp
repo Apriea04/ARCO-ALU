@@ -1258,6 +1258,18 @@ void IEEEOperations::divide()
         result.bitfield.expo = 255;
         result.bitfield.partFrac = 1;
     }
+    else if(a.bitfield.expo >=255)
+    {
+        result.bitfield.sign = 0;
+        result.bitfield.expo = 255;
+        result.bitfield.partFrac = 0;
+    }
+    else if (b.bitfield.expo>=255)
+    {
+        result.bitfield.sign = 0;
+        result.bitfield.expo = 255;
+        result.bitfield.partFrac = 1;
+    }
     else
     {
 
