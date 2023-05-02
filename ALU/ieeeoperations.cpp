@@ -131,6 +131,11 @@ bool IEEEOperations::esOp2Denormal()
     return b.bitfield.expo == 0b00000000;
 }
 
+bool IEEEOperations::esOpDenormal(Code num)
+{
+    return num.bitfield.expo == 0b00000000;
+}
+
 //Metodo de la suma
 
 void IEEEOperations::add()
@@ -384,10 +389,10 @@ float IEEEOperations::addVals(float a, float b)
     union Code ca,cb, res;
     ca.numero = a;
     cb.numero = b;
-    result.numero = 0;
+    res.numero = 0;
 
-    mantisaA = ca.bitfield.partFrac | 0x800000;
-    mantisaB = cb.bitfield.partFrac | 0x800000;
+    unsigned int mA = ca.bitfield.partFrac | 0x800000;
+    unsigned int mB = cb.bitfield.partFrac | 0x800000;
 
     //Casos raros:
     //TODO reformatear esto
@@ -401,11 +406,11 @@ float IEEEOperations::addVals(float a, float b)
             res.numero=0;
         }
         return res.numero;
-    } if (esOp1Denormal()) {
-        mantisaA &= 0x7FFFFF;
+    } if (esOpDenormal(ca)) {
+        mA &= 0x7FFFFF;
     }
-    if (esOp2Denormal()) {
-        mantisaB &= 0x7FFFFF;
+    if (esOpDenormal(cb)) {
+        mB &= 0x7FFFFF;
     } if (ca.bitfield.expo == 0xFF && ca.bitfield.partFrac == 0) {
         res.bitfield.expo = 0xFF;
         res.bitfield.sign = ca.bitfield.sign;
@@ -429,7 +434,7 @@ float IEEEOperations::addVals(float a, float b)
     int g = 0;
     int r = 0;
     int st = 0;
-    bool c; //Acarreo
+    bool c = false; //Acarreo
     bool operandos_intercambiados = false;
     bool complementado_P = false;
     unsigned int mask;
@@ -442,9 +447,9 @@ float IEEEOperations::addVals(float a, float b)
         Code tmp = ca;
         ca = cb;
         cb = tmp;
-        mask = mantisaA;
-        mantisaA = mantisaB;
-        mantisaB = mask;
+        mask = mA;
+        mA = mB;
+        mB = mask;
         operandos_intercambiados = true;
     }
 
@@ -461,11 +466,11 @@ float IEEEOperations::addVals(float a, float b)
 
     if (ca.bitfield.sign != cb.bitfield.sign)
     {
-        mantisaB = complementoDos(mantisaB);
+        mB = complementoDos(mB);
         //cout << "Los signos no coinciden. Mantisa B: " << mantisaB << endl;
     }
 
-    unsigned int p = mantisaB;
+    unsigned int p = mB;
     //cout<<"Valor de p: "<<p<<endl;
 
     //Paso 6
@@ -510,7 +515,7 @@ float IEEEOperations::addVals(float a, float b)
 
     // Paso 8
     //cout << "Paso 8: " << endl;
-    p = p + mantisaA;
+    p = p + mA;
 
     //cout << "Valor de p: " << p << endl;
 
@@ -537,7 +542,7 @@ float IEEEOperations::addVals(float a, float b)
         st = g|r|st;
         r = p & 0x1;
         p = p >> 1;
-        if (c==1) {
+        if (c) {
             p = p | 0x800000; //Poner el uno de c
         }
         else
@@ -586,12 +591,12 @@ float IEEEOperations::addVals(float a, float b)
     if ((r==1 && st==1) || (r==1 && st==0 && p0 == 1)) {
         p+=1;
         if (p > 0xFFFFFF){
-            c = 1;
+            c = true;
             p = p & 0xFFFFFF;
         } else {
-            c=0;
+            c = false;
         }
-        if (c==1) { //Si hay acarreo, c=1
+        if (c) { //Si hay acarreo, c=1
             p = p >> 1; //Desplazo 1 bit a la derecha p
             p = p | 0x800000; //Añado el uno del carry al principio
             exponente += 1; //Ajustamos el exponente
@@ -1254,18 +1259,25 @@ void IEEEOperations::divide()
 
     if(b.numero == 0)
     {
+        // Not a Number
         result.bitfield.sign = 0;
         result.bitfield.expo = 255;
         result.bitfield.partFrac = 1;
     }
-    else if(a.bitfield.expo >=255)
+    else if(a.numero == 0)
     {
+
+    }
+    else if(a.bitfield.expo > 254)
+    {
+        // Infinite
         result.bitfield.sign = 0;
         result.bitfield.expo = 255;
         result.bitfield.partFrac = 0;
     }
-    else if (b.bitfield.expo>=255)
+    else if (b.bitfield.expo> 254)
     {
+        // Not a Number
         result.bitfield.sign = 0;
         result.bitfield.expo = 255;
         result.bitfield.partFrac = 1;
@@ -1356,7 +1368,10 @@ void IEEEOperations::divide()
         // Paso 6
         // Exponente de la división
         // TODO Usar método addVals (no funciona bien aquí, pero solo ocurre aquí)
-        int exponent = a.bitfield.expo - b.bitfield.expo + last_x.bitfield.expo;
+        //int exponent = a.bitfield.expo - b.bitfield.expo + last_x.bitfield.expo;
+
+        float exponent = addVals(static_cast<float>(a.bitfield.expo), -static_cast<float>(b.bitfield.expo));
+        exponent = addVals(exponent, last_x.bitfield.expo);
 
         // Paso 5
         // Signo de la división

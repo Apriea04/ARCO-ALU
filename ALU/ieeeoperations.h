@@ -46,6 +46,7 @@ private:
     bool operandosOpuestos(float a, float b);
     bool esOp1Denormal();
     bool esOp2Denormal();
+    bool esOpDenormal(Code num);
 
     //Metodos para debug
     string intBinario(unsigned int op);
