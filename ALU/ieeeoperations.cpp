@@ -411,6 +411,11 @@ float IEEEOperations::addVals(float a, float b)
         res.bitfield.sign = ca.bitfield.sign;
         res.bitfield.partFrac = 0x0; //Si op1 es inf, el resultado tb
         return res.numero;
+    } else if (cb.bitfield.expo == 0xFF && cb.bitfield.partFrac == 0) {
+        res.bitfield.expo = 0xFF;
+        res.bitfield.sign = cb.bitfield.sign;
+        res.bitfield.partFrac = 0x0; //Si op1 es inf, el resultado tb
+        return res.numero;
     }
 
     int exponente;
