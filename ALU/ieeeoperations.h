@@ -19,8 +19,8 @@ public:
     string translateHex(union Code op);
     void add();
     float addVals(float a, float b);
-    void multiply();
-    float multiplyVals(float a, float b);
+    bool multiply();
+    float multiplyVals(float a, float b, bool *resultDenormal);
     void divide();
     union Code getResult();
 

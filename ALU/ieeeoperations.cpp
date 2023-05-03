@@ -723,16 +723,18 @@ bool IEEEOperations::checkUnderflow(int exponent)
 
 // Metodo de la multiplicacion
 
-void IEEEOperations::multiply()
+bool IEEEOperations::multiply()
 {
     result.numero = 0;
 
     union Code a, b;
     a.numero = op1.numero;
     b.numero = op2.numero;
-    int n = 24;
+    bool denormal;
 
-    result.numero = multiplyVals(a.numero, b.numero);
+    result.numero = multiplyVals(a.numero, b.numero, &denormal);
+
+    return denormal;
     /*
     bitset<24> mA{a.bitfield.partFrac};
     bitset<24> mB{b.bitfield.partFrac};
@@ -1000,9 +1002,10 @@ void IEEEOperations::multiply()
  * @return P, product a*b (float)
  */
 
-float IEEEOperations::multiplyVals(float a, float b)
+float IEEEOperations::multiplyVals(float a, float b, bool *resultDenormal)
 {
 
+    *resultDenormal = false;
 
     union Code ca, cb, res;
     ca.numero = a;
@@ -1089,8 +1092,8 @@ float IEEEOperations::multiplyVals(float a, float b)
 
         if (t >= n)
         {
-            res.bitfield.partFrac = 1;
-            res.bitfield.expo = 255;
+            res.bitfield.expo = 0;
+            *resultDenormal = true; //Porque no podemos representar el resultado.
         }
         else
         {
@@ -1121,7 +1124,7 @@ float IEEEOperations::multiplyVals(float a, float b)
             }
 
             // 2. Exponente producto = Exponente mínimo
-
+            *resultDenormal = true;
             res.bitfield.expo = 1;
         }
     }
@@ -1171,7 +1174,7 @@ float IEEEOperations::multiplyVals(float a, float b)
                     }
 
                     // 2. Exponente producto = Exponente mínimo
-
+                    *resultDenormal = true;
                     res.bitfield.expo = 1;
                 }
             }
@@ -1223,7 +1226,7 @@ float IEEEOperations::multiplyVals(float a, float b)
 
             else
             {
-                // TODO Controlar casos denormales
+                *resultDenormal = true;
             }
         }
 
@@ -1250,6 +1253,7 @@ void IEEEOperations::divide()
     a.numero = op1.numero;
     b.numero = op2.numero;
     int n = 24;
+    bool prodDenormal;
 
     bitset<24> mA{a.bitfield.partFrac};
     bitset<24> mB{b.bitfield.partFrac};
@@ -1328,8 +1332,8 @@ void IEEEOperations::divide()
         // Paso 3
         // Asignar x0 e y0
 
-        float x0 = multiplyVals(numA, b_prime);
-        float y0 = multiplyVals(numB, b_prime);
+        float x0 = multiplyVals(numA, b_prime, &prodDenormal);
+        float y0 = multiplyVals(numB, b_prime, &prodDenormal);
 
         cout << "A: " << numA << " B: " << numB << " B': " << b_prime << endl;
         cout << "Valor x0: " << x0 << endl;
@@ -1347,9 +1351,9 @@ void IEEEOperations::divide()
         while(difference>=threshold)
         {
             r = 2 - y;
-            y = multiplyVals(y, r);
+            y = multiplyVals(y, r, &prodDenormal);
             x_old = x;
-            x = multiplyVals(x, r);
+            x = multiplyVals(x, r, &prodDenormal);
 
             cout << "R:  " << r << endl;
             cout << "Y1: " << y << endl;
