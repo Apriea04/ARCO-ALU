@@ -19,10 +19,12 @@ public:
     string translateHex(union Code op);
     void add();
     float addVals(float a, float b);
-    bool multiply();
+    void multiply();
     float multiplyVals(float a, float b, bool *resultDenormal);
     void divide();
     union Code getResult();
+    void operations(string n);
+    bool getMulti();
 
 private:
     union Code op1;
@@ -47,6 +49,7 @@ private:
     bool esOp1Denormal();
     bool esOp2Denormal();
     bool esOpDenormal(Code num);
+    bool multi;
 
     //Metodos para debug
     string intBinario(unsigned int op);

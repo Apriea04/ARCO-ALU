@@ -37,7 +37,7 @@ void MainWindow::on_AddButton_clicked()
     IEEEOperations ieee = IEEEOperations(op1, op2);
 
     //Llamada al metodo suma
-    ieee.add();
+    ieee.operations("suma");
 
     //Recogemos el valor de resultado
     union Code result = ieee.getResult();
@@ -77,7 +77,12 @@ void MainWindow::on_MultiplyButton_clicked()
     IEEEOperations ieee = IEEEOperations(op1, op2);
 
     //Llamada al metodo multiplicacion
-    bool denormal = ieee.multiply();
+    ieee.operations("multiplicacion");
+
+    //Booleano de control de denormales
+    bool denormal = ieee.getMulti();
+    cout<<denormal<<endl;
+
 
     //Recogemos el valor de resultado
     union Code result = ieee.getResult();
@@ -122,7 +127,7 @@ void MainWindow::on_DivisionButton_clicked()
     IEEEOperations ieee = IEEEOperations(op1, op2);
 
     //Llamada al metodo division
-    ieee.divide();
+    ieee.operations("division");
 
     //Recogemos el valor de resultado
     union Code result = ieee.getResult();
