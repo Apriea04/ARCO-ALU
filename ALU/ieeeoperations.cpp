@@ -876,7 +876,7 @@ void IEEEOperations::divide()
 
         while(difference>=threshold)
         {
-            r = 2 - y;
+            r = addVals(2, -y);
             y = multiplyVals(y, r, &prodDenormal);
             x_old = x;
             x = multiplyVals(x, r, &prodDenormal);
@@ -897,8 +897,6 @@ void IEEEOperations::divide()
 
         // Paso 6
         // Exponente de la división
-        // TODO Usar método addVals (no funciona bien aquí, pero solo ocurre aquí)
-        //int exponent = a.bitfield.expo - b.bitfield.expo + last_x.bitfield.expo;
 
         float exponent = addVals(static_cast<float>(a.bitfield.expo), -static_cast<float>(b.bitfield.expo));
         exponent = addVals(exponent, last_x.bitfield.expo);
