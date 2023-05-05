@@ -93,7 +93,7 @@ string IEEEOperations::translateHex(union Code op)
     stringstream ss;
     ss << hex << uppercase << bitSet.to_ullong();
     string hexString = ss.str();
-    return hexString;
+    return "0x" + hexString;
 }
 
 unsigned int IEEEOperations::complementoDos(unsigned int n) {
