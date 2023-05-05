@@ -38,7 +38,19 @@
     <item row="1" column="0">
      <layout class="QGridLayout" name="gridLayout">
       <item row="3" column="1">
-       <widget class="QLineEdit" name="OP1Decimal"/>
+       <widget class="QLineEdit" name="OP1Decimal">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>39</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+       </widget>
       </item>
       <item row="10" column="1" rowspan="3">
        <widget class="QPushButton" name="AddButton">
@@ -79,6 +91,21 @@
       </item>
       <item row="15" column="1">
        <widget class="QLineEdit" name="ResultDecimal">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>39</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background: rgba(0,0,0,0);</string>
+        </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>
@@ -86,6 +113,20 @@
       </item>
       <item row="7" column="5">
        <widget class="QLineEdit" name="OP2Hex">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>39</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background: rgba(0,0,0,0);</string>
+        </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>
@@ -132,13 +173,6 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="3">
-       <widget class="QLineEdit" name="OP1IEEE">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item row="16" column="1">
        <spacer name="verticalSpacer_6">
         <property name="orientation">
@@ -154,6 +188,21 @@
       </item>
       <item row="15" column="5">
        <widget class="QLineEdit" name="ResultHex">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>39</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background: rgba(0,0,0,0);</string>
+        </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>
@@ -168,6 +217,21 @@
       </item>
       <item row="15" column="3">
        <widget class="QLineEdit" name="ResultIEEE">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>39</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background: rgba(0,0,0,0);</string>
+        </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>
@@ -230,6 +294,20 @@
       </item>
       <item row="3" column="5">
        <widget class="QLineEdit" name="OP1Hex">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>39</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background: rgba(0,0,0,0);</string>
+        </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>
@@ -307,10 +385,36 @@
        </widget>
       </item>
       <item row="7" column="1">
-       <widget class="QLineEdit" name="OP2Decimal"/>
+       <widget class="QLineEdit" name="OP2Decimal">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>39</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+       </widget>
       </item>
       <item row="7" column="3">
        <widget class="QLineEdit" name="OP2IEEE">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>39</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background: rgba(0,0,0,0);</string>
+        </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>
@@ -340,6 +444,27 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="3">
+       <widget class="QLineEdit" name="OP1IEEE">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>39</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background: rgba(0,0,0,0);</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -350,7 +475,7 @@
      <x>0</x>
      <y>0</y>
      <width>1071</width>
-     <height>25</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
