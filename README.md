@@ -1,8 +1,14 @@
 # COMPUTER ARCHITECTURE LAB ASSIGNMENT 4 (ALU)
 
 ## Summary
+This is an Arithmetic Logical Unit (ALU) written in C++ programming language under Qt Environment.
 
-This is an Arithmetic Logical Unit written in C++ programming language under the Qt Environment.
+## Features
+- Representation of operands and result in decimal, IEEE754 convention and Hexadecimal formats
+- Sum of operands
+- Product of operands
+- Division of operands
+- Operations mentioned above with operands in simple precission
 
 
 ## Compiling and running the program using Qt Creator IDE
@@ -14,6 +20,8 @@ Then, you can compile and run the program by pressing the Run button (Ctrl + R).
 
 ## Link to video
 In the following link you will find a video with the explanation of how the program works and how to use it correctly. **PLEASE, OPEN IT WITH UNIVERSIDAD DE LEÓN CREDENTIALS, OTHERWISE, YOU CAN'T OPEN IT**
+https://drive.google.com/file/d/17BRlg2q4gYTQ_RpzL20o6TtcUOdR-qT8/view?usp=share_link
+
  
 ## Authors
 - David Fernández Urdiales (dfernu00@estudiantes.unileon.es)
