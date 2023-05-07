@@ -517,7 +517,14 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
 {
 
     // Paso 1
-    //  Almacenar valores en los registros A, B y P
+    /*
+    Almacenar valores en los registros A, B y P
+    A = a sub n-1, a sub n-2, ..., a0
+    B = b sub n-1, b sub n-2, ..., b0
+    P = 0
+
+    */
+
     bitset<24> P{0};
     int n = 24;
     bool c = false; // Acarreo
@@ -526,7 +533,9 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
 
     for (int i = 0; i < n; i++)
     {
-        // Paso 1.1
+        // Paso 2.1
+        //Si (a sub 0=1) entonces P=P+B; c=acarreo
+        //Si no P=P+0;
         if (MA->test(0))
         {
             val = addVals(P.to_ullong(), MB.to_ullong());
@@ -550,7 +559,7 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
             c = false;
         }
 
-        // Paso 1.2
+        // Paso 2.2
         // Desplazar 1 bit a la derecha (c,P,A)
 
         *MA = bitset<24>{MA->to_ullong() >> 1};
@@ -577,6 +586,7 @@ unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
     }
 
     // Paso 3: Devolver
+    /* El producto aparece como un valor de 2n bits en el conjunto de registros (P,A) */
     return P.to_ullong();
 }
 
@@ -644,14 +654,23 @@ float IEEEOperations::multiplyVals(float a, float b, bool *resultDenormal)
     mB.set(n - 1);
 
     // Paso 2
-    // Exponente del producto
+    // Exponente del producto = e sub a + e sub b
     int exponent = (ca.bitfield.expo - 127) + (cb.bitfield.expo - 127);
 
     // Paso 3
+    //Cálculo de la mantisa del producto, mp:
+
     // 3.1 Mantisa del producto
+    //(P,A)=m sub a * m sub b; Se utiliza el algoritmo del producto de enteros sin signo.
+
     bitset<24> P{multiplyWithoutSign(&mA, mB)};
 
-    // 3.2 Desplazar (P,A) 1 bit a la izquierda o sumar 1 al exponente
+    /*
+    3.2
+
+    Si (P sub n-1 = 0) entonces desplazar (P,A) un bit a la izquierda.
+    Si_no sumar 1 al exponente del producto
+    */
     if (!P.test(n - 1))
     {
         P = bitset<24>{P << 1};
@@ -671,10 +690,13 @@ float IEEEOperations::multiplyVals(float a, float b, bool *resultDenormal)
         exponent++;
     }
 
-    // 3.3 Bit redondeo
+    // 3.3 Bit redondeo: r = a sub n-1
     bool r = mA.test(n - 1);
 
     // 3.4 Bit sticky
+    //st=OR(a sub n-2,a sub n-3,..a sub 0); (Siendo n el número de bits de la mantisa).
+
+
     bool st = false;
 
     for (int i = 0; i < n; i++)
@@ -687,6 +709,12 @@ float IEEEOperations::multiplyVals(float a, float b, bool *resultDenormal)
     }
 
     // 3.5 Redondeo
+    /*
+    Si (r=1 y st=1) O (r=1 y st=0 y P sub 0=1) entonces P=P+1;
+    Comprobación de desbordamientos.
+    Tratamiento específico cuando hay operandos denormales.
+    m sub p = P
+    */
     if ((r == true && st == true) || (r == true && st == false && P.test(0)))
     {
         unsigned long long value = addVals(P.to_ullong(), 1);
@@ -700,12 +728,32 @@ float IEEEOperations::multiplyVals(float a, float b, bool *resultDenormal)
     res.bitfield.sign = ca.bitfield.sign ^ cb.bitfield.sign;
 
     // Comprobación desbordamientos
+
+    /*
+    Hay desbordamiento a infinito (overflow) cuando el exponente del
+    producto es mayor que el máximo representable.
+    */
     if (checkOverflow(exponent))
     {
         res.bitfield.partFrac = 0;
         res.bitfield.expo = 255;
     }
 
+    /*
+    Tratamiento de desbordamiento a cero (underflow):
+
+    Si (exponente_producto<exponente_mínimo) entonces:
+        t=exponente_mínimo-exponente_producto;
+
+        Si (t ≥ numero_bits_mantisa) entonces
+            1. Hay underflow (porque se desplaza toda la mantisa).
+
+        Si_no
+            i. Desplazar aritméticamente (P,A) t bits a la derecha.
+            Nota: El resultado será un valor denormal.
+            2. exponente_producto=exponente_mínimo
+
+    */
     else if (checkUnderflow(exponent))
     {
 
@@ -751,6 +799,29 @@ float IEEEOperations::multiplyVals(float a, float b, bool *resultDenormal)
     }
     else
     {
+        /*
+        Cuando alguno de los operandos es denormal, hay varios casos posibles:
+
+        1. exponente_producto<exponente_mínimo: (resultado denormal)
+            Igual tratamiento que en el caso de underflow
+
+        2. exponente_producto>exponente_mínimo:
+            - t sub 1=exponente_producto-exponente_mínimo;
+            - t sub 2=número de bits que es necesario desplazar (P,A) hacia la
+              izquierda para que la mantisa quede normalizada.
+            - t=min(t1,t2);
+            - exponente_producto=exponente_producto-t;
+            - Desplazar aritméticamente (P,A) t bits a la izquierda.
+
+        3. exponente_producto=exponente_mínimo:
+            - El resultado es directamente un denormal.
+
+
+        Operandos cero: 0*n = 0
+        0 * +-inf = indeterminado (NaN)
+
+        */
+
         // Tratamiento específico con operandos denormales
         if (esOp1Denormal() || esOp2Denormal())
         {
