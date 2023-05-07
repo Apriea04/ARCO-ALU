@@ -5,7 +5,6 @@ IEEEOperations::IEEEOperations(union Code op1, union Code op2)
 {
     this->op1 = op1;
     this->op2 = op2;
-    // this->result = result;
 }
 
 // Destructor
@@ -31,44 +30,6 @@ bool IEEEOperations::getMulti()
     return multi;
 }
 
-// Metodoo para debug
-// Metodo que le pasas un int y devuelve el binario ieee754
-string IEEEOperations::intBinario(unsigned int op)
-{
-    union Code x;
-    x.numero = op;
-    // Transforma a bits el exponente
-    std::bitset<8> exponenteBin(x.bitfield.expo);
-    // Transforma a bits la parte fraccionaria
-    std::bitset<23> fraccionariaBin(x.bitfield.partFrac);
-    // Devuelve el numero en binario IEEE754
-    return std::to_string(x.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
-}
-
-// Metodoo para debug
-// Metodo que le pasas un union Code y devuelve el numero en hexadecimal
-string IEEEOperations::intHex(unsigned int op)
-{
-
-    union Code x;
-    x.numero = op;
-
-    // Transforma a bits el exponente
-    std::bitset<8> exponenteBin(x.bitfield.expo);
-    // Transforma a bits la parte fraccionaria
-    std::bitset<23> fraccionariaBin(x.bitfield.partFrac);
-    // Devuelve el numero en binario IEEE754
-    string bin = std::to_string(x.bitfield.sign) + exponenteBin.to_string() + fraccionariaBin.to_string();
-
-    // Convertir el string binario a un objeto bitset
-    bitset<64> bitSet(bin);
-
-    // Convertir el objeto bitset a un número hexadecimal en un stringstream
-    stringstream ss;
-    ss << hex << uppercase << bitSet.to_ullong();
-    string hexString = ss.str();
-    return hexString;
-}
 
 // Metodo que le pasas un union code y devuelve el binario ieee754
 string IEEEOperations::translateIEEE(union Code op)
@@ -101,6 +62,7 @@ string IEEEOperations::translateHex(union Code op)
     string hexString = ss.str();
     return "0x" + hexString;
 }
+
 
 /**
  * @brief Returns the 2s-complement of a number
@@ -820,7 +782,7 @@ float IEEEOperations::multiplyVals(float a, float b, bool *resultDenormal)
  */
 void IEEEOperations::divide()
 {
-
+    //Método de Goldschmidt
     result.numero = 0;
 
     union Code a, b;
@@ -829,12 +791,15 @@ void IEEEOperations::divide()
     int n = 24;
     bool prodDenormal;
 
+    //Creamos las mantisas de a y b
     bitset<24> mA{a.bitfield.partFrac};
     bitset<24> mB{b.bitfield.partFrac};
+
 
     mA.set(n - 1);
     mB.set(n - 1);
 
+    //Si el divisor es 0, forzamos el NaN
     if (b.numero == 0)
     {
         // Not a Number
@@ -842,9 +807,11 @@ void IEEEOperations::divide()
         result.bitfield.expo = 255;
         result.bitfield.partFrac = 1;
     }
+    //Si el numero de a es 0...
     else if (a.numero == 0)
     {
     }
+    //Si el exponente de a es > a 254, forzamos el infinito.
     else if (a.bitfield.expo > 254)
     {
         // Infinite
@@ -852,6 +819,8 @@ void IEEEOperations::divide()
         result.bitfield.expo = 255;
         result.bitfield.partFrac = 0;
     }
+
+    //Si el exponente de b es > a 254, forzamos el NaN
     else if (b.bitfield.expo > 254)
     {
         // Not a Number
@@ -859,11 +828,23 @@ void IEEEOperations::divide()
         result.bitfield.expo = 255;
         result.bitfield.partFrac = 1;
     }
+    //Si no...
     else
     {
 
         // Paso 1
-        // Escalar A y B
+        // Escalar A y B de tal forma que b pertenezca a [1,2)
+
+        /*
+        Para escalar un número tenemos que coger los 24 bits de su
+        mantisa de tal forma que la parte entera del número sea el bit
+        que no se representa en IEEE754 y el resto de bits serán la parte
+        fraccionaria. Una vez separadas la parte entera de la
+        fraccionaria hay que pasar el número a decimal. De esta forma
+        obligamos a que el número escalado pertenezca al intervalo
+        [1,2).
+        */
+
         float numA = 0;
         float numB = 0;
 
@@ -881,8 +862,19 @@ void IEEEOperations::divide()
         }
 
         // Paso 2
-        // Buscar una solución aproximada
+        // Buscar una solución aproximada b'=1/b en la tabla
 
+        /*
+            b       b' = 1/b
+        [1, 1.25)    1.00
+        [1.25, 2)    0.80
+        Calculo del signo de la división
+        SignoDivision = SignoA XOR SignoB
+
+        Cálculo del exponente de la División:
+        ExpDivision = ExA – ExB + Ex(A*1/B)
+
+        */
         float b_prime = 0;
 
         if (numB >= 1 && numB < 1.25)
@@ -896,13 +888,20 @@ void IEEEOperations::divide()
         }
 
         // Paso 3
-        // Asignar x0 e y0
+        // Asignar x0 = a*b' ; y0 = b*b'
 
         float x0 = multiplyVals(numA, b_prime, &prodDenormal);
         float y0 = multiplyVals(numB, b_prime, &prodDenormal);
 
         // Paso 4
         // Iterar para obtener una aproximación
+        //r=2-y sub i; y sub i+1 = y sub i * r;
+        //x sub i+1 = x sub i * r;
+
+        //Cuando el valor del cociente x sub i se obtiene con
+        //precisión suficiente, se detiene el proceso.
+        //X1 - X0 < 10-4, condición de finalización.
+
         float r = 0, x = x0, y = y0, x_old = 0;
 
         float threshold = pow(10, -4);
@@ -923,12 +922,14 @@ void IEEEOperations::divide()
 
         // Paso 6
         // Exponente de la división
+        //ExpDiv = ExA – ExB + Ex (A * 1/B)
 
         float exponent = addVals(static_cast<float>(a.bitfield.expo), -static_cast<float>(b.bitfield.expo));
         exponent = addVals(exponent, last_x.bitfield.expo);
 
         // Paso 5
         // Signo de la división
+        //SignoDivision = SignoA XOR Signo B = 0 XOR 0 = 0
         result.bitfield.sign = a.bitfield.sign ^ b.bitfield.sign;
 
         if (exponent > 254)
@@ -942,6 +943,8 @@ void IEEEOperations::divide()
 
             // Paso 7
             // Parte fraccionaria de la división
+            //Obtenemos el resultado final
+            //Pasamos el numero a decimal
             result.bitfield.partFrac = last_x.bitfield.partFrac;
         }
     }
