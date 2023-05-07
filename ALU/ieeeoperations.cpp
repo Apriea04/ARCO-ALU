@@ -1,5 +1,6 @@
 #include "ieeeoperations.h"
 
+
 // Constructor
 IEEEOperations::IEEEOperations(union Code op1, union Code op2)
 {
@@ -188,8 +189,18 @@ float IEEEOperations::addVals(float a, float b)
 
     // Casos raros:
     // TODO reformatear esto
+
+
+    /*
+    Operandos denormales
+    1. Asignar valor 0 a la parte entera de la mantisa en lugar de 1.
+    2. Asignar al exponente el valor mínimo representable. (1 en IEEE754)
+    3. Operar normalmente.
+    */
+
     if (operandosOpuestos(a, b))
     {
+
         if (ca.bitfield.expo == 0xFF && ca.bitfield.partFrac == 0)
         {
             res.bitfield.expo = 0xFF;
@@ -229,6 +240,8 @@ float IEEEOperations::addVals(float a, float b)
     int exponente;
 
     // Paso 1
+    //Seteamos a 0 g, r, y el sticky
+    //Seteamos a false los booleanos operandos_intercambiados y complementado P
 
     int g = 0;
     int r = 0;
@@ -239,7 +252,11 @@ float IEEEOperations::addVals(float a, float b)
     unsigned int mask;
 
     // Paso 2
-
+    /*
+    Si (ea<eb) entonces
+    1. Intercambiar los operandos (A⇔B);
+    2. Operandos_intercambiados=cierto;
+    */
     if (ca.bitfield.expo < cb.bitfield.expo)
     {
         // Intercambiamos los operandos
@@ -253,20 +270,38 @@ float IEEEOperations::addVals(float a, float b)
     }
 
     // Paso 3
+    /*
+    ExponenteSuma = ExponenteA
+    d = ExponenteA – ExponenteB
+    */
 
     exponente = ca.bitfield.expo;
     int d = ca.bitfield.expo - cb.bitfield.expo;
 
     // Paso 4
+    /*
+    Si (SignoA ≠ SignoB)
+    MantisaB = Complemento_2 (MantisaB)
+    */
 
     if (ca.bitfield.sign != cb.bitfield.sign)
     {
         mB = complementoDos(mB);
     }
 
+    //Paso 5
+    //P = MantisaB
+
     unsigned int p = mB;
 
     // Paso 6
+    /*
+    Asignar
+    Bit de guarda: g = P sub d-1
+    Bit de redondeo: r = P sub d-2
+    Bit sticky: st = OR (P sub d-3, P sub d-4, … , P sub 0)
+    ¡¡Siempre que esos bits existan!!
+    */
 
     if (d >= 1)
     {
@@ -289,6 +324,14 @@ float IEEEOperations::addVals(float a, float b)
         }
     }
     // Paso 7
+    /*
+    Si (SignoA ≠ SignoB)
+        Desplazar P a la derecha d bits introduciendo 1´s por
+        la izquierda.
+    Si no
+        Desplazar P a la derecha d bits introduciendo 0´s por
+        la izquierda.
+    */
 
     if (cb.bitfield.sign != ca.bitfield.sign)
     {
@@ -302,6 +345,9 @@ float IEEEOperations::addVals(float a, float b)
     }
 
     // Paso 8
+    /*
+    P = MantisaA + P ; C1 = acarreo de la suma entera
+    */
 
     p = p + mA;
 
@@ -317,6 +363,11 @@ float IEEEOperations::addVals(float a, float b)
     }
 
     // Paso 9
+    /*
+    Si (SignoA ≠ SignoB) y (Pn – 1 = 1) y (C1 = 0) entonces (Solamente es posible si d = 0)
+    P = Complemento_2 (P)
+    Complementada_P = cierto
+    */
     if (ca.bitfield.sign != cb.bitfield.sign && ((p & 0x800000) == 0x800000) && (c == 0))
     {
         p = complementoDos(p);
@@ -324,6 +375,19 @@ float IEEEOperations::addVals(float a, float b)
     }
 
     // Paso 10
+    /*
+    Si (SignoA = SignoB) y (C1 = 1) entonces
+        St = OR(g, r, st)
+        r = P sub 0
+        Desplazar 1 bit a la derecha (C sub 1, P)
+        Ajustamos el exponente de la suma ExponenteSuma = ExponenteSuma + 1;
+    Si no
+        Calcula K bits que es necesario desplazar P para que sea una mantisa normalizada.
+        Si (k=0) entonces st = OR(r,st), r=g;
+        Si (k>1) entonces r=0, st=0;
+        Desplazar (P,g) a la izquierda k bits y ajustar el exponente de la suma: ExponenteSuma = ExponenteSuma - K
+    */
+
     if (ca.bitfield.sign == cb.bitfield.sign && c == 1)
     {
         st = g | r | st;
@@ -378,6 +442,16 @@ float IEEEOperations::addVals(float a, float b)
     }
 
     // Paso 11
+    /*
+    Redondear P
+    Si (r = 1 y st = 1) o (r = 1 y st = 0 y P0 = 1) entonces
+        P = P + 1; C2 = acarreo
+        Si (C2 = 1) desplazar 1 bit a la derecha (C2, P) y ajustar el exponente de la suma:
+            ExponenteSuma = ExponenteSuma + 1
+        MantisaSuma = P
+    */
+
+
 
     unsigned int p0 = p & 0x1;
     if ((r == 1 && st == 1) || (r == 1 && st == 0 && p0 == 1))
@@ -402,6 +476,13 @@ float IEEEOperations::addVals(float a, float b)
     res.bitfield.partFrac = p & 0x7FFFFF;
 
     // Paso 12
+    /*
+     Calcular el signo del resultado
+    Si (operandos_intercambiados = falso) y (Complemento_P = cierto) entonces
+        SignoSuma = SignoB
+    Si no
+        SignoSuma = SignoA
+    */
 
     if ((operandos_intercambiados == false) && (complementado_P == true))
     {
@@ -422,6 +503,7 @@ float IEEEOperations::addVals(float a, float b)
     res.bitfield.expo = static_cast<unsigned int>(exponente) & 0xFF;
 
     // Paso 13
+    /*Devolvemos el resultado*/
     return res.numero;
 }
 
