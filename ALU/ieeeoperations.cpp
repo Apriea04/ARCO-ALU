@@ -639,10 +639,17 @@ void IEEEOperations::multiply()
 
 float IEEEOperations::multiplyVals(float a, float b, bool *resultDenormal)
 {
-    //Forzamos si un valor es 0, devuelvo 0
-    if(a == 0 || b == 0){
+    //Forzamos si un valor es 0, devuelvo 0, o si hay 0 * inf, devuelvo NAN
+    if(a == 0 && b == INFINITY){
+        return NAN;
+    }
+    else if(a == INFINITY && b == 0){
+        return NAN;
+    }
+    else if(a == 0 || b == 0){
         return 0;
     }
+
     *resultDenormal = false;
 
     union Code ca, cb, res;
