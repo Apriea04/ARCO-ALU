@@ -960,7 +960,7 @@ void IEEEOperations::divide()
     mB.set(n - 1);
 
     //Si el divisor es 0, forzamos el NaN
-    if (b.numero == 0)
+    if (b.bitfield.expo < 1)
     {
         // Not a Number
         result.bitfield.sign = 0;
