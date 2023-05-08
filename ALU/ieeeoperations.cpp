@@ -516,6 +516,7 @@ float IEEEOperations::addVals(float a, float b)
 unsigned int IEEEOperations::multiplyWithoutSign(bitset<24> *MA, bitset<24> MB)
 {
 
+
     // Paso 1
     /*
     Almacenar valores en los registros A, B y P
@@ -638,7 +639,10 @@ void IEEEOperations::multiply()
 
 float IEEEOperations::multiplyVals(float a, float b, bool *resultDenormal)
 {
-
+    //Forzamos si un valor es 0, devuelvo 0
+    if(a == 0 || b == 0){
+        return 0;
+    }
     *resultDenormal = false;
 
     union Code ca, cb, res;
