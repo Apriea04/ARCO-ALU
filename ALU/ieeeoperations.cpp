@@ -187,10 +187,6 @@ float IEEEOperations::addVals(float a, float b)
     unsigned int mA = ca.bitfield.partFrac | 0x800000;
     unsigned int mB = cb.bitfield.partFrac | 0x800000;
 
-    // Casos raros:
-    // TODO reformatear esto
-
-
     /*
     Operandos denormales
     1. Asignar valor 0 a la parte entera de la mantisa en lugar de 1.
